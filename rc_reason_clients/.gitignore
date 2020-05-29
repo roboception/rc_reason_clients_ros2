@@ -1,0 +1,13 @@
+build
+
+*~
+*.swp
+*.pyc
+
+__pycache__
+
+.*
+!.gitignore
+!.gitlab-ci.yml
+!.gitmodules
+!.clang-format
