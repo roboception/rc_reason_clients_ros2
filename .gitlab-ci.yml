@@ -4,11 +4,15 @@ variables:
 
 default:
   before_script:
+  - export DEBIAN_FRONTEND=noninteractive
+  - apt-get update -yq && apt-get install -y curl lsb-release
   - export DISTRO_CODENAME=`lsb_release -cs` && echo Using distro $DISTRO_CODENAME
   - echo Using ROS_DISTRO $ROS_DISTRO
-  - export DEBIAN_FRONTEND=noninteractive
+  - echo "deb http://apt.roboception.de/stable $DISTRO_CODENAME main" > /etc/apt/sources.list.d/roboception-stable.list
+  - if [ "$TESTING_DEBS" = "true" ]; then echo "deb http://apt.roboception.de/testing $DISTRO_CODENAME main" > /etc/apt/sources.list.d/roboception-testing.list ; fi
+  - curl http://apt.roboception.de/archive.key | apt-key add -
   - apt-get update -yq
-  - apt-get install -y lintian curl
+  - apt-get install -y ros-${ROS_DISTRO}-rc-common-msgs
   - rosdep install --from-paths . --ignore-src -r -y
   - export CMAKE_PREFIX_PATH="/opt/ros/$ROS_DISTRO"
 
@@ -55,6 +59,12 @@ stages:
       - rc_reason_msgs/build/*.deb
     expire_in: 30 days
 
+.build_msgs_testing:
+  extends:
+    - .build_msgs
+  variables:
+    TESTING_DEBS: "true"
+
 .upload_deb:
   stage: upload
   image: registry.roboception.de/tools/docker_images:bionic-buildimage
@@ -93,13 +103,25 @@ stages:
 ########################
 msgs:dashing:amd64:
   <<: *amd64_dashing_job
-  extends: .build_msgs
+  extends: .build_msgs_testing
 
 msgs:dashing:armhf:
   <<: *armhf_dashing_job
-  extends: .build_msgs
+  extends: .build_msgs_testing
 
 msgs:eloquent:amd64:
+  <<: *amd64_eloquent_job
+  extends: .build_msgs_testing
+
+msgs_stable:dashing:amd64:
+  <<: *amd64_dashing_job
+  extends: .build_msgs
+
+msgs_stable:dashing:armhf:
+  <<: *armhf_dashing_job
+  extends: .build_msgs
+
+msgs_stable:eloquent:amd64:
   <<: *amd64_eloquent_job
   extends: .build_msgs
 
@@ -107,6 +129,14 @@ msgs:eloquent:amd64:
 #####################################
 upload_testing:bionic:
   extends: .upload_deb_testing
+  dependencies:
+    - msgs:dashing:amd64
+    - msgs:dashing:armhf
+    - msgs:eloquent:amd64
 
 upload_stable:bionic:
   extends: .upload_deb_stable
+  dependencies:
+    - msgs_stable:dashing:amd64
+    - msgs_stable:dashing:armhf
+    - msgs_stable:eloquent:amd64
