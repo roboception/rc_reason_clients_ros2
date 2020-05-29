@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'tagdetect_client = rc_reason_clients.tagdetect:main'
+            'rc_april_tag_detect_client = rc_reason_clients.tagdetect:rc_april_tag_detect_client',
+            'rc_qr_code_detect_client = rc_reason_clients.tagdetect:rc_qr_code_detect_client'
         ],
     },
 )

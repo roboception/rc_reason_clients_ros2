@@ -20,10 +20,10 @@ class TagClient(RestClient):
         return response
 
 
-def main(args=None):
+def main(args=None, rest_node='rc_april_tag_detect'):
     rclpy.init(args=args)
 
-    client = TagClient('rc_april_tag_detect')
+    client = TagClient(rest_node)
 
     host = client.get_parameter('host').value
     if not host:
@@ -37,6 +37,14 @@ def main(args=None):
         pass
 
     rclpy.shutdown()
+
+
+def rc_april_tag_detect_client(args=None):
+    main(rest_node='rc_april_tag_detect')
+
+
+def rc_qr_code_detect_client(args=None):
+    main(rest_node='rc_qr_code_detect')
 
 
 if __name__ == '__main__':
