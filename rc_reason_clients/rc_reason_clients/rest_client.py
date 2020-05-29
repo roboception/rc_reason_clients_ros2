@@ -57,3 +57,20 @@ class RestClient(Node):
             self.get_logger().error(str(e))
             response.return_code.value = -1000
             response.return_code.message = str(e)
+
+    def set_rest_parameters(self, parameters):
+        try:
+            url = f'http://{self.host}/api/v1/nodes/{self.rest_name}/parameters'
+            res = requests_retry_session().put(url, json=parameters)
+            j = res.json()
+            self.get_logger().info(f"rest response: {json.dumps(j, indent=2)}")
+            if 'return_code' in j and j['return_code']['value'] != 0:
+                self.get_logger().warn(f"Setting parameter failed: {j['return_code']['message']}")
+                return False
+            if res.status_code != 200:
+                self.get_logger().error(f"Unexpected status code: {res.status_code}")
+                return False
+            return True
+        except Exception as e:
+            self.get_logger().error(str(e))
+            return False
