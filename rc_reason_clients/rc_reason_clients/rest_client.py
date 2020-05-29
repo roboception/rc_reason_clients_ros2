@@ -1,6 +1,6 @@
 from rclpy.node import Node
 
-from rcl_interfaces.msg import ParameterDescriptor, ParameterType
+from rcl_interfaces.msg import ParameterDescriptor, ParameterType, SetParametersResult, IntegerRange, FloatingPointRange
 
 import json
 
@@ -8,7 +8,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
-from rc_reason_clients.message_conversion import extract_values, populate_instance
+from rc_reason_clients.message_conversion import extract_values, populate_instance, type_map
 
 
 def requests_retry_session(retries=3,
@@ -34,6 +34,21 @@ def requests_retry_session(retries=3,
     return session
 
 
+def parameter_descriptor_from_rest(p):
+    pd = ParameterDescriptor(description=p['description'])
+    if p['type'] in type_map['str']:
+        pd.type = ParameterType.PARAMETER_STRING
+    elif p['type'] in type_map['bool']:
+        pd.type = ParameterType.PARAMETER_BOOL
+    elif p['type'] in type_map['int']:
+        pd.type = ParameterType.PARAMETER_INTEGER
+        pd.integer_range = [IntegerRange(from_value=p['min'], to_value=p['max'], step=1)]
+    elif p['type'] in type_map['float']:
+        pd.type = ParameterType.PARAMETER_DOUBLE
+        pd.floating_point_range = [FloatingPointRange(from_value=p['min'], to_value=p['max'], step=0.001)]
+    return pd
+
+
 class RestClient(Node):
 
     def __init__(self, rest_name):
@@ -41,6 +56,20 @@ class RestClient(Node):
         self.rest_name = rest_name
         self.declare_parameter('host', '', ParameterDescriptor(type=ParameterType.PARAMETER_STRING, read_only=True))
         self.host = self.get_parameter('host').value
+
+        self.declare_rest_parameters()
+        self.set_parameters_callback(self.params_callback)
+
+    def declare_rest_parameters(self):
+        rest_params = self.get_rest_parameters()
+        def to_ros_param(p):
+            return (p['name'], p['value'], parameter_descriptor_from_rest(p))
+        parameters = [to_ros_param(p) for p in rest_params]
+        self.declare_parameters('', parameters)
+
+    def params_callback(self, parameters):
+        success = self.set_rest_parameters([{'name': p.name, 'value': p.value} for p in parameters])
+        return SetParametersResult(successful=success)
 
     def call_rest_service(self, service, request, response):
         try:
@@ -57,6 +86,18 @@ class RestClient(Node):
             self.get_logger().error(str(e))
             response.return_code.value = -1000
             response.return_code.message = str(e)
+
+    def get_rest_parameters(self):
+        try:
+            url = f'http://{self.host}/api/v1/nodes/{self.rest_name}/parameters'
+            res = requests_retry_session().get(url)
+            if res.status_code != 200:
+                self.get_logger().error(f"Unexpected status code: {res.status_code}")
+                return []
+            return res.json()
+        except Exception as e:
+            self.get_logger().error(str(e))
+            return []
 
     def set_rest_parameters(self, parameters):
         try:

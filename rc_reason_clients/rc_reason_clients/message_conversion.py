@@ -45,7 +45,7 @@ type_map = {
 "bool":    ["bool"],
 "int":     ["int8", "byte", "uint8", "char",
             "int16", "uint16", "int32", "uint32",
-            "int64", "uint64", "float32", "float64"],
+            "int64", "uint64"],
 "float":   ["float32", "float64", "double"],
 "str":     ["string"]
 }
