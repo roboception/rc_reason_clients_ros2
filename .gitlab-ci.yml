@@ -1,0 +1,112 @@
+variables:
+  GET_SOURCES_ATTEMPTS: "3"
+  GIT_DEPTH: "0"
+
+default:
+  before_script:
+  - export DISTRO_CODENAME=`lsb_release -cs` && echo Using distro $DISTRO_CODENAME
+  - echo Using ROS_DISTRO $ROS_DISTRO
+  - export DEBIAN_FRONTEND=noninteractive
+  - apt-get update -yq
+  - apt-get install -y lintian curl
+  - rosdep install --from-paths . --ignore-src -r -y
+  - export CMAKE_PREFIX_PATH="/opt/ros/$ROS_DISTRO"
+
+stages:
+  - build
+#  - test_clients
+  - upload
+
+#########################
+# Templates using anchors
+#########################
+.amd64_dashing_t: &amd64_dashing_job
+  image: ros:dashing-ros-base-bionic
+  tags:
+    - amd64
+    - docker
+
+.armhf_dashing_t: &armhf_dashing_job
+  image: ros:dashing-ros-base-bionic
+  tags:
+    - armhf
+    - docker
+
+.amd64_eloquent_t: &amd64_eloquent_job
+  image: ros:eloquent-ros-base-bionic
+  tags:
+    - amd64
+    - docker
+
+#############
+# Templates
+#############
+.build_msgs:
+  stage: build
+  script:
+    - cd rc_reason_msgs
+    - mkdir build && cd build
+    - cmake -DCMAKE_INSTALL_PREFIX="/opt/ros/$ROS_DISTRO" -DCMAKE_BUILD_TYPE=Release ..
+    - make -j 4
+    - CTEST_OUTPUT_ON_FAILURE=1 make test
+    - make package
+  artifacts:
+    paths:
+      - rc_reason_msgs/build/*.deb
+    expire_in: 30 days
+
+.upload_deb:
+  stage: upload
+  image: registry.roboception.de/tools/docker_images:bionic-buildimage
+  before_script:
+     - export DISTRO_CODENAME=`lsb_release -cs` && echo Using distro $DISTRO_CODENAME
+  script:
+    - if [ -z "$APT_REPO" ]; then export APT_REPO=testing; fi
+    - DEBS=$(find . -maxdepth 3 -name "*~${DISTRO_CODENAME}_*.deb")
+    - upload_deb.sh $DISTRO_CODENAME-$APT_REPO $DEBS
+
+.upload_deb_testing:
+  extends:
+    - .upload_deb
+  variables:
+    APT_REPO: "testing"
+  only:
+    - master
+  except:
+    - tags
+
+.upload_deb_stable:
+  extends:
+    - .upload_deb
+  variables:
+    APT_REPO: "stable"
+  only:
+    - /^v[0-9]+\.[0-9]+\.[0-9]+/
+  except:
+    - branches
+
+##############
+#### Jobs ####
+##############
+
+# Test (on every commit)
+########################
+msgs:dashing:amd64:
+  <<: *amd64_dashing_job
+  extends: .build_msgs
+
+msgs:dashing:armhf:
+  <<: *armhf_dashing_job
+  extends: .build_msgs
+
+msgs:eloquent:amd64:
+  <<: *amd64_eloquent_job
+  extends: .build_msgs
+
+# upload packages for master and tags
+#####################################
+upload_testing:bionic:
+  extends: .upload_deb_testing
+
+upload_stable:bionic:
+  extends: .upload_deb_stable
