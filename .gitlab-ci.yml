@@ -18,7 +18,7 @@ default:
 
 stages:
   - build
-#  - test_clients
+  - test_clients
   - upload
 
 #########################
@@ -64,6 +64,18 @@ stages:
     - .build_msgs
   variables:
     TESTING_DEBS: "true"
+
+.test_clients:
+  stage: test_clients
+  script:
+    - dpkg -i rc_reason_msgs/build/*.deb
+    - cd rc_reason_clients
+    - python3 -m pytest --junitxml=junit_report.xml --log-cli-level=INFO -s
+  artifacts:
+    paths:
+      - rc_reason_clients/junit_report.xml
+    reports:
+      junit: rc_reason_clients/junit_report.xml
 
 .upload_deb:
   stage: upload
@@ -124,6 +136,24 @@ msgs_stable:dashing:armhf:
 msgs_stable:eloquent:amd64:
   <<: *amd64_eloquent_job
   extends: .build_msgs
+
+test:dashing:amd64:
+  <<: *amd64_dashing_job
+  extends: .test_clients
+  dependencies:
+    - msgs:dashing:amd64
+
+test:dashing:armhf:
+  <<: *armhf_dashing_job
+  extends: .test_clients
+  dependencies:
+    - msgs:dashing:armhf
+
+test:eloquent:amd64:
+  <<: *amd64_eloquent_job
+  extends: .test_clients
+  dependencies:
+    - msgs:eloquent:amd64
 
 # upload packages for master and tags
 #####################################

@@ -73,7 +73,6 @@ def test_detectedtag():
 
     ros_tag = DetectedTag()
     populate_instance(tag, ros_tag)
-    print(tag)
     assert ros_tag.tag.id == tag['id']
     assert ros_tag.tag.size == tag['size']
     assert ros_tag.instance_id == tag['instance_id']
