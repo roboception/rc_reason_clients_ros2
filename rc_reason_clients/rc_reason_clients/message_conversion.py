@@ -241,11 +241,11 @@ def _to_object_inst(msg, rostype, roottype, inst, stack):
         raise FieldTypeMismatchException(roottype, stack, rostype, type(msg))
 
     # do our custom mappings
-    map_custom(msg, rostype)
+    mapped_msg = map_custom(msg, rostype)
 
     inst_fields = inst.get_fields_and_field_types()
 
-    for field_name in msg:
+    for field_name in mapped_msg:
         # Add this field to the field stack
         field_stack = stack + [field_name]
 
@@ -256,7 +256,7 @@ def _to_object_inst(msg, rostype, roottype, inst, stack):
         field_rostype = inst_fields[field_name]
         field_inst = getattr(inst, field_name)
 
-        field_value = _to_inst(msg[field_name], field_rostype,
+        field_value = _to_inst(mapped_msg[field_name], field_rostype,
                     roottype, field_inst, field_stack)
 
         setattr(inst, field_name, field_value)
