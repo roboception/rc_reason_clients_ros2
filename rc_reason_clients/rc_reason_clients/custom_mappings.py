@@ -36,7 +36,7 @@ def map_api2ros(msg, rostype):
         header = {'stamp': msg['timestamp'], 'frame_id': msg['pose_frame']}
         new_msg['header'] = header
         new_msg['tag'] = {'id': msg['id'], 'size': msg['size']}
-        pose = copy.deepcopy(msg['pose'])
+        pose = msg['pose']
         new_msg['pose'] = {'pose': pose, 'header': header}
         new_msg['instance_id'] = msg['instance_id']
         return new_msg
@@ -47,6 +47,16 @@ def map_api2ros(msg, rostype):
         new_msg['pose_frame'] = msg['plane']['pose_frame']
         del new_msg['plane']['pose_frame']
         return new_msg
+    elif rostype == 'rc_reason_msgs/LoadCarrier':
+        new_msg = {}
+        for key in msg:
+            if key not in ['pose', 'pose_frame']:
+                new_msg[key] = msg[key]
+        pose = msg['pose']
+        header = {'frame_id': msg['pose_frame']}
+        new_msg['pose'] = {'pose': pose, 'header': header}
+        return new_msg
+
 
     return msg
 

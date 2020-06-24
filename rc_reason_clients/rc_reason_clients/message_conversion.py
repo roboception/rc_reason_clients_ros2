@@ -54,14 +54,16 @@ type_map = {
 primitive_types = [bool, int, float]
 string_types = (str,)
 
-list_types = [list, tuple, np.ndarray]
+list_types = [list, tuple]
+array_types = [np.ndarray]
 ros_time_types = ["builtin_interfaces/Time", "builtin_interfaces/Duration"]
 ros_primitive_types = ["bool", "byte", "char", "int8", "uint8", "int16",
                        "uint16", "int32", "uint32", "int64", "uint64",
                        "float32", "float64", "double", "string"]
 ros_header_types = ["Header", "std_msgs/Header", "roslib/Header"]
 ros_binary_types = ["uint8[]", "char[]"]
-list_braces = re.compile(r'\[[^\]]*\]')
+array_braces = re.compile(r'\[[^\]]*\]')
+list_tokens = re.compile('<(.+?)>')
 ros_binary_types_list_braces = [("uint8[]", re.compile(r'uint8\[[^\]]*\]')),
                                 ("char[]", re.compile(r'char\[[^\]]*\]'))]
 
@@ -136,6 +138,10 @@ def _from_inst(inst, rostype):
     if type(inst) in list_types:
         return _from_list_inst(inst, rostype)
 
+    # Check if it's an array
+    if type(inst) in array_types:
+        return _from_array_inst(inst, rostype)
+
     # Assume it's otherwise a full ros msg object
     msg = _from_object_inst(inst, rostype)
 
@@ -144,13 +150,29 @@ def _from_inst(inst, rostype):
     return msg
 
 
+def _from_array_inst(inst, rostype):
+    # Can duck out early if the array is empty
+    if len(inst) == 0:
+        return []
+
+    # Remove the array indicators from the rostype
+    rostype = array_braces.sub("", rostype)
+
+    # Shortcut for primitives
+    if rostype in ros_primitive_types and not rostype in type_map.get('float'):
+        return list(inst)
+
+    # Call to _to_inst for every element of the list
+    return [_from_inst(x, rostype) for x in inst]
+
+
 def _from_list_inst(inst, rostype):
     # Can duck out early if the list is empty
     if len(inst) == 0:
         return []
 
     # Remove the list indicators from the rostype
-    rostype = list_braces.sub("", rostype)
+    rostype = re.search(list_tokens, rostype).group(1)
 
     # Shortcut for primitives
     if rostype in ros_primitive_types and not rostype in type_map.get('float'):
@@ -182,6 +204,10 @@ def _to_inst(msg, rostype, roottype, inst=None, stack=[]):
     # Check whether we're dealing with a list type
     if inst is not None and type(inst) in list_types:
         return _to_list_inst(msg, rostype, roottype, inst, stack)
+
+    # Check whether we're dealing with an array type
+    if inst is not None and type(inst) in array_types:
+        return _to_array_inst(msg, rostype, roottype, inst, stack)
 
     # Otherwise, the type has to be a full ros msg type, so msg must be a dict
     if inst is None:
@@ -235,7 +261,23 @@ def _to_list_inst(msg, rostype, roottype, inst, stack):
         return []
 
     # Remove the list indicators from the rostype
-    rostype = list_braces.sub("", rostype)
+    rostype = re.search(list_tokens, rostype).group(1)
+
+    # Call to _to_inst for every element of the list
+    return [_to_inst(x, rostype, roottype, None, stack) for x in msg]
+
+
+def _to_array_inst(msg, rostype, roottype, inst, stack):
+    # Typecheck the msg
+    if type(msg) not in array_types + list_types:
+        raise FieldTypeMismatchException(roottype, stack, rostype, type(msg))
+
+    # Can duck out early if the list is empty
+    if len(msg) == 0:
+        return []
+
+    # Remove the array indicators from the rostype
+    rostype = array_braces.sub("", rostype)
 
     # Call to _to_inst for every element of the list
     return [_to_inst(x, rostype, roottype, None, stack) for x in msg]
