@@ -37,7 +37,7 @@ from rclpy.clock import ROSClock
 import numpy as np
 
 from rc_reason_clients import ros_loader
-from rc_reason_clients.custom_mappings import map_custom
+from rc_reason_clients.custom_mappings import map_api2ros, map_ros2api
 
 import math
 import re
@@ -137,7 +137,11 @@ def _from_inst(inst, rostype):
         return _from_list_inst(inst, rostype)
 
     # Assume it's otherwise a full ros msg object
-    return _from_object_inst(inst, rostype)
+    msg = _from_object_inst(inst, rostype)
+
+    # do our custom mappings
+    msg = map_ros2api(msg, rostype)
+    return msg
 
 
 def _from_list_inst(inst, rostype):
@@ -243,7 +247,7 @@ def _to_object_inst(msg, rostype, roottype, inst, stack):
         raise FieldTypeMismatchException(roottype, stack, rostype, type(msg))
 
     # do our custom mappings
-    mapped_msg = map_custom(msg, rostype)
+    mapped_msg = map_api2ros(msg, rostype)
 
     inst_fields = inst.get_fields_and_field_types()
 

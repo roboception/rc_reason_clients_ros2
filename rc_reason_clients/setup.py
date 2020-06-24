@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             'rc_april_tag_detect_client = rc_reason_clients.tagdetect:rc_april_tag_detect_client',
-            'rc_qr_code_detect_client = rc_reason_clients.tagdetect:rc_qr_code_detect_client'
+            'rc_qr_code_detect_client = rc_reason_clients.tagdetect:rc_qr_code_detect_client',
+            'rc_silhouettematch_client = rc_reason_clients.silhouettematch:main'
         ],
     },
 )

@@ -28,7 +28,9 @@
 
 import copy
 
-def map_custom(msg, rostype):
+
+def map_api2ros(msg, rostype):
+    """ Map an API msg to ROS """
     if rostype == 'rc_reason_msgs/DetectedTag':
         new_msg = {}
         header = {'stamp': msg['timestamp'], 'frame_id': msg['pose_frame']}
@@ -38,5 +40,27 @@ def map_custom(msg, rostype):
         new_msg['pose'] = {'pose': pose, 'header': header}
         new_msg['instance_id'] = msg['instance_id']
         return new_msg
-    else:
-        return msg
+    elif rostype == 'shape_msgs/Plane':
+        return {'coef': [msg['normal']['x'], msg['normal']['y'], msg['normal']['z'], msg['distance']]}
+    elif rostype in ['rc_reason_msgs/GetBasePlaneCalibration_Response', 'rc_reason_msgs/CalibrateBasePlane_Response']:
+        new_msg = copy.deepcopy(msg)
+        new_msg['pose_frame'] = msg['plane']['pose_frame']
+        del new_msg['plane']['pose_frame']
+        return new_msg
+
+    return msg
+
+def map_ros2api(msg, rostype):
+    """ Map a ROS msg to API """
+    if rostype == 'shape_msgs/Plane':
+        c = msg['coef']
+        return {'normal': {'x':c[0], 'y': c[1], 'z': c[2]}, 'distance': c[3]}
+    elif rostype == 'rc_reason_msgs/CalibrateBasePlane_Request':
+        new_msg = copy.deepcopy(msg)
+        if msg['plane_estimation_method'] == 'STEREO':
+            new_msg['stereo'] = {'plane_preference': msg['stereo_plane_preference']}
+            del new_msg['stereo_plane_preference']
+        return new_msg
+
+    # no mapping required, return generated one
+    return msg

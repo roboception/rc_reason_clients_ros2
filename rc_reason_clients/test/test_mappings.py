@@ -30,11 +30,16 @@ import pytest
 
 from rc_reason_clients.message_conversion import extract_values, populate_instance, type_map
 from rc_reason_msgs.msg import DetectedTag
+from shape_msgs.msg import Plane
+from rc_reason_msgs.srv import CalibrateBasePlane, GetBasePlaneCalibration
 
+
+def compare_timestamp(ros_ts, ts):
+    assert ros_ts.sec == ts['sec']
+    assert ros_ts.nanosec == ts['nsec']
 
 def compare_header(ros_header, timestamp, frame_id):
-    assert ros_header.stamp.sec == timestamp['sec']
-    assert ros_header.stamp.nanosec == timestamp['nsec']
+    compare_timestamp(ros_header.stamp, timestamp)
     assert ros_header.frame_id == frame_id
 
 def compare_pose(ros_pose, rest_pose):
@@ -45,6 +50,12 @@ def compare_pose(ros_pose, rest_pose):
     assert ros_pose.orientation.y == rest_pose['orientation']['y']
     assert ros_pose.orientation.z == rest_pose['orientation']['z']
     assert ros_pose.orientation.w == rest_pose['orientation']['w']
+
+def compare_plane(ros_plane, rest_plane):
+    assert ros_plane.coef[0] == rest_plane['normal']['x']
+    assert ros_plane.coef[1] == rest_plane['normal']['y']
+    assert ros_plane.coef[2] == rest_plane['normal']['z']
+    assert ros_plane.coef[3] == rest_plane['distance']
 
 def test_detectedtag():
     tag = {
@@ -79,3 +90,93 @@ def test_detectedtag():
     compare_header(ros_tag.header, tag['timestamp'], tag['pose_frame'])
     compare_pose(ros_tag.pose.pose, tag['pose'])
     assert ros_tag.pose.header == ros_tag.header
+
+
+def test_plane():
+    plane = {
+                "distance": 0.3,
+                "normal": {
+                    "y": 0.2,
+                    "x": 0.1,
+                    "z": 0.3
+                }
+            }
+    ros_plane = Plane()
+    populate_instance(plane, ros_plane)
+    compare_plane(ros_plane, plane)
+
+
+def test_get_base_plane_calibration_response():
+    response = {
+                    "plane": {
+                        "distance": -0.7552042203510121,
+                        "normal": {
+                            "y": -0.02136428281262259,
+                            "x": 0.02327135522722706,
+                            "z": 0.999500881163089
+                    },
+                    "pose_frame": "camera"
+                    },
+                    "return_code": {
+                        "message": "",
+                        "value": 0
+                    }
+                }
+    ros_response = GetBasePlaneCalibration.Response()
+    populate_instance(response, ros_response)
+    compare_plane(ros_response.plane, response['plane'])
+    assert ros_response.pose_frame == response['plane']['pose_frame']
+    assert ros_response.return_code.value == response['return_code']['value']
+    assert ros_response.return_code.message == response['return_code']['message']
+
+
+def test_calibrate_base_plane_response():
+    response = {
+                    "timestamp": {
+                        "sec": 1593000384,
+                        "nsec": 386523224
+                    },
+                    "plane": {
+                        "distance": -0.7552042203510121,
+                        "normal": {
+                            "y": -0.02136428281262259,
+                            "x": 0.02327135522722706,
+                            "z": 0.999500881163089
+                    },
+                    "pose_frame": "camera"
+                    },
+                    "return_code": {
+                        "message": "test",
+                        "value": 0
+                    }
+                }
+    ros_response = CalibrateBasePlane.Response()
+    populate_instance(response, ros_response)
+    compare_plane(ros_response.plane, response['plane'])
+    assert ros_response.pose_frame == response['plane']['pose_frame']
+    assert ros_response.return_code.value == response['return_code']['value']
+    assert ros_response.return_code.message == response['return_code']['message']
+    compare_timestamp(ros_response.timestamp, response['timestamp'])
+
+
+@pytest.mark.parametrize('method', ['STEREO', 'APRILTAG', 'MANUAL'])
+def test_calibrate_base_plane_request(method):
+    ros_req = CalibrateBasePlane.Request()
+    ros_req.pose_frame = 'camera'
+    ros_req.offset = 0.123
+    ros_req.plane_estimation_method = method
+    if method == 'STEREO':
+        ros_req.stereo_plane_preference = 'CLOSEST'
+    elif method == 'MANUAL':
+        ros_req.plane.coef = [0.1, -0.2, 0.3, 0.4]
+    api_req = extract_values(ros_req)
+    assert ros_req.pose_frame == api_req['pose_frame']
+    assert ros_req.plane_estimation_method == api_req['plane_estimation_method']
+    assert ros_req.offset == api_req['offset']
+    if method == 'STEREO':
+        assert ros_req.stereo_plane_preference == api_req['stereo']['plane_preference']
+    elif method == 'MANUAL':
+        assert ros_req.plane.coef[0] == api_req['plane']['normal']['x']
+        assert ros_req.plane.coef[1] == api_req['plane']['normal']['y']
+        assert ros_req.plane.coef[2] == api_req['plane']['normal']['z']
+        assert ros_req.plane.coef[3] == api_req['plane']['distance']
