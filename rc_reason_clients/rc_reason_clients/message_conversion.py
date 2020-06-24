@@ -34,6 +34,8 @@
 import rclpy
 from rclpy.clock import ROSClock
 
+import numpy as np
+
 from rc_reason_clients import ros_loader
 from rc_reason_clients.custom_mappings import map_custom
 
@@ -52,14 +54,14 @@ type_map = {
 primitive_types = [bool, int, float]
 string_types = (str,)
 
-list_types = [list, tuple]
+list_types = [list, tuple, np.ndarray]
 ros_time_types = ["builtin_interfaces/Time", "builtin_interfaces/Duration"]
 ros_primitive_types = ["bool", "byte", "char", "int8", "uint8", "int16",
                        "uint16", "int32", "uint32", "int64", "uint64",
                        "float32", "float64", "double", "string"]
 ros_header_types = ["Header", "std_msgs/Header", "roslib/Header"]
 ros_binary_types = ["uint8[]", "char[]"]
-list_tokens = re.compile('<(.+?)>')
+list_braces = re.compile(r'\[[^\]]*\]')
 ros_binary_types_list_braces = [("uint8[]", re.compile(r'uint8\[[^\]]*\]')),
                                 ("char[]", re.compile(r'char\[[^\]]*\]'))]
 
@@ -144,7 +146,7 @@ def _from_list_inst(inst, rostype):
         return []
 
     # Remove the list indicators from the rostype
-    rostype = re.search(list_tokens, rostype).group(1)
+    rostype = list_braces.sub("", rostype)
 
     # Shortcut for primitives
     if rostype in ros_primitive_types and not rostype in type_map.get('float'):
@@ -229,7 +231,7 @@ def _to_list_inst(msg, rostype, roottype, inst, stack):
         return []
 
     # Remove the list indicators from the rostype
-    rostype = re.search(list_tokens, rostype).group(1)
+    rostype = list_braces.sub("", rostype)
 
     # Call to _to_inst for every element of the list
     return [_to_inst(x, rostype, roottype, None, stack) for x in msg]
