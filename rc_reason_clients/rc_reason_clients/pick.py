@@ -29,8 +29,10 @@
 import rclpy
 
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
-from rc_reason_msgs.srv import SetLoadCarrier, GetLoadCarriers, DeleteLoadCarriers, DetectLoadCarriers
+from rc_reason_msgs.srv import SetLoadCarrier, GetLoadCarriers, DeleteLoadCarriers
 from rc_reason_msgs.srv import SetRegionOfInterest3D, GetRegionsOfInterest3D, DeleteRegionsOfInterest3D
+from rc_reason_msgs.srv import DetectLoadCarriers, DetectFillingLevel
+from rc_reason_msgs.srv import ComputeGrasps, DetectItems
 
 from rc_reason_clients.rest_client import RestClient
 
@@ -43,10 +45,11 @@ class PickClient(RestClient):
         self.srv = self.create_service(SetLoadCarrier, 'set_load_carrier', self.set_lc_cb)
         self.srv = self.create_service(GetLoadCarriers, 'get_load_carriers', self.get_lcs_cb)
         self.srv = self.create_service(DeleteLoadCarriers, 'delete_load_carriers', self.delete_lcs_cb)
-        self.srv = self.create_service(DetectLoadCarriers, 'detect_load_carriers', self.detect_lcs_cb)
         self.srv = self.create_service(SetRegionOfInterest3D, 'set_region_of_interest', self.set_roi_cb)
         self.srv = self.create_service(GetRegionsOfInterest3D, 'get_regions_of_interst', self.get_rois_cb)
         self.srv = self.create_service(DeleteRegionsOfInterest3D, 'delete_regions_of_interest', self.delete_rois_cb)
+        self.srv = self.create_service(DetectLoadCarriers, 'detect_load_carriers', self.detect_lcs_cb)
+        self.srv = self.create_service(DetectFillingLevel, 'detect_filling_level', self.detect_filling_level_cb)
 
     def set_lc_cb(self, request, response):
         self.call_rest_service('set_load_carrier', request, response)
@@ -58,10 +61,6 @@ class PickClient(RestClient):
 
     def delete_lcs_cb(self, request, response):
         self.call_rest_service('delete_load_carriers', request, response)
-        return response
-
-    def detect_lcs_cb(self, request, response):
-        self.call_rest_service('detect_load_carriers', request, response)
         return response
 
     def set_roi_cb(self, request, response):
@@ -76,11 +75,53 @@ class PickClient(RestClient):
         self.call_rest_service('delete_regions_of_interest', request, response)
         return response
 
+    def detect_lcs_cb(self, request, response):
+        self.call_rest_service('detect_load_carriers', request, response)
+        return response
+
+    def detect_filling_level_cb(self, request, response):
+        self.call_rest_service('detect_filling_level', request, response)
+        return response
+
+
+class ItemPickClient(PickClient):
+
+    def __init__(self, rest_name):
+        super().__init__(rest_name)
+        self.srv = self.create_service(ComputeGrasps, 'compute_grasps', self.compute_grasps_cb)
+
+    def compute_grasps_cb(self, request, response):
+        self.call_rest_service('compute_grasps', request, response)
+        return response
+
+
+class BoxPickClient(PickClient):
+
+    def __init__(self, rest_name):
+        super().__init__(rest_name)
+        self.srv = self.create_service(ComputeGrasps, 'compute_grasps', self.compute_grasps_cb)
+        self.srv = self.create_service(DetectItems, 'detect_items', self.detect_items_cb)
+
+    def compute_grasps_cb(self, request, response):
+        self.call_rest_service('compute_grasps', request, response)
+        return response
+
+    def detect_items_cb(self, request, response):
+        self.call_rest_service('detect_items', request, response)
+        return response
+
 
 def main(args=None, rest_node='rc_itempick'):
     rclpy.init(args=args)
 
-    client = PickClient(rest_node)
+    if rest_node == 'rc_itempick':
+        client = ItemPickClient(rest_node)
+    elif rest_node == 'rc_boxpick':
+        client = BoxPickClient(rest_node)
+    else:
+        client.get_logger().error(f'unknown rest_node {rest_node}')
+        rclpy.shutdown()
+        exit(1)
 
     host = client.get_parameter('host').value
     if not host:

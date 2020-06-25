@@ -29,45 +29,6 @@
 import copy
 
 
-def map_api2ros(msg, rostype):
-    """ Map an API msg to ROS """
-    if rostype == 'rc_reason_msgs/DetectedTag':
-        new_msg = {}
-        header = {'stamp': msg['timestamp'], 'frame_id': msg['pose_frame']}
-        new_msg['header'] = header
-        new_msg['tag'] = {'id': msg['id'], 'size': msg['size']}
-        new_msg['pose'] = {'pose': msg['pose'], 'header': header}
-        new_msg['instance_id'] = msg['instance_id']
-        return new_msg
-    elif rostype == 'shape_msgs/Plane':
-        return {'coef': [msg['normal']['x'], msg['normal']['y'], msg['normal']['z'], msg['distance']]}
-    elif rostype in ['rc_reason_msgs/GetBasePlaneCalibration_Response', 'rc_reason_msgs/CalibrateBasePlane_Response']:
-        new_msg = copy.deepcopy(msg)
-        new_msg['pose_frame'] = msg['plane']['pose_frame']
-        del new_msg['plane']['pose_frame']
-        return new_msg
-    elif rostype == 'rc_reason_msgs/LoadCarrier':
-        new_msg = {}
-        for key in msg:
-            if key not in ['pose', 'pose_frame']:
-                new_msg[key] = msg[key]
-        header = {'frame_id': msg['pose_frame']}
-        new_msg['pose'] = {'pose': msg['pose'], 'header': header}
-        return new_msg
-    elif rostype == 'rc_reason_msgs/RegionOfInterest3D':
-        new_msg = {}
-        new_msg['id'] = msg['id']
-        header = {'frame_id': msg['pose_frame']}
-        new_msg['pose'] = {'pose': msg['pose'], 'header': header}
-        if msg['type'] == 'BOX':
-            new_msg['primitive'] = {'type': 1, 'dimensions': [msg['box']['x'], msg['box']['y'], msg['box']['z']]}
-        elif msg['type'] == 'SPHERE':
-            new_msg['primitive'] = {'type': 2, 'dimensions': [msg['sphere']['radius']]}
-        return new_msg
-
-
-    return msg
-
 def map_ros2api(msg, rostype):
     """ Map a ROS msg to API """
     if rostype == 'shape_msgs/Plane':
@@ -89,11 +50,39 @@ def map_ros2api(msg, rostype):
         new_msg['pose'] = msg['pose']['pose']
         new_msg['pose_frame'] = msg['pose']['header']['frame_id']
         return new_msg
-    elif rostype == 'rc_reason_msgs/DetectLoadCarriers_Request':
+    elif rostype in ['rc_reason_msgs/DetectLoadCarriers_Request', 'rc_reason_msgs/DetectFillingLevel_Request']:
         new_msg = copy.deepcopy(msg)
         # don't send robot pose if not external
         if msg['pose_frame'] != 'external':
             del new_msg['robot_pose']
+        return new_msg
+    elif rostype in ['rc_reason_msgs/ComputeGrasps_Request']:
+        new_msg = {}
+        for k in ['pose_frame', 'item_models', 'suction_surface_length', 'suction_surface_width']:
+            new_msg[k] = msg[k]
+        # only send robot pose if external
+        if msg['pose_frame'] == 'external':
+            new_msg['robot_pose'] = msg['robot_pose']
+        if msg['region_of_interest_id']:
+            new_msg['region_of_interest_id'] = msg['region_of_interest_id']
+        if msg['load_carrier_id']:
+            new_msg['load_carrier_id'] = msg['load_carrier_id']
+            new_msg['load_carrier_compartment'] = msg['load_carrier_compartment']
+        if msg['collision_detection']['gripper_id']:
+            new_msg['collision_detection'] = msg['collision_detection']
+        return new_msg
+    elif rostype in ['rc_reason_msgs/DetectItems_Request']:
+        new_msg = {}
+        for k in ['pose_frame', 'item_models']:
+            new_msg[k] = msg[k]
+        # only send robot pose if external
+        if msg['pose_frame'] == 'external':
+            new_msg['robot_pose'] = msg['robot_pose']
+        if msg['region_of_interest_id']:
+            new_msg['region_of_interest_id'] = msg['region_of_interest_id']
+        if msg['load_carrier_id']:
+            new_msg['load_carrier_id'] = msg['load_carrier_id']
+            new_msg['load_carrier_compartment'] = msg['load_carrier_compartment']
         return new_msg
     elif rostype == 'rc_reason_msgs/RegionOfInterest3D':
         new_msg = {}
@@ -109,5 +98,61 @@ def map_ros2api(msg, rostype):
             new_msg['sphere'] = {'radius': d[0]}
         return new_msg
 
-    # no mapping required, return generated one
+    # no mapping required, return auto-generated one
+    return msg
+
+
+def map_api2ros(msg, rostype):
+    """ Map an API msg to ROS """
+    if rostype == 'rc_reason_msgs/DetectedTag':
+        new_msg = {}
+        header = {'stamp': msg['timestamp'], 'frame_id': msg['pose_frame']}
+        new_msg['header'] = header
+        new_msg['tag'] = {'id': msg['id'], 'size': msg['size']}
+        new_msg['pose'] = {'pose': msg['pose'], 'header': header}
+        new_msg['instance_id'] = msg['instance_id']
+        return new_msg
+    elif rostype == 'shape_msgs/Plane':
+        return {'coef': [msg['normal']['x'], msg['normal']['y'], msg['normal']['z'], msg['distance']]}
+    elif rostype in ['rc_reason_msgs/GetBasePlaneCalibration_Response', 'rc_reason_msgs/CalibrateBasePlane_Response']:
+        new_msg = copy.deepcopy(msg)
+        new_msg['pose_frame'] = msg['plane']['pose_frame']
+        del new_msg['plane']['pose_frame']
+        return new_msg
+    elif rostype in ['rc_reason_msgs/LoadCarrier', 'rc_reason_msgs/LoadCarrierWithFillingLevel']:
+        new_msg = {}
+        for key in msg:
+            if key not in ['pose', 'pose_frame']:
+                new_msg[key] = msg[key]
+        header = {'frame_id': msg['pose_frame']}
+        new_msg['pose'] = {'pose': msg['pose'], 'header': header}
+        return new_msg
+    elif rostype in ['rc_reason_msgs/SuctionGrasp']:
+        new_msg = {}
+        for key in msg:
+            if key not in ['pose', 'pose_frame', 'timestamp', 'type']:
+                new_msg[key] = msg[key]
+        header = {'stamp': msg['timestamp'], 'frame_id': msg['pose_frame']}
+        new_msg['pose'] = {'pose': msg['pose'], 'header': header}
+        return new_msg
+    elif rostype in ['rc_reason_msgs/Item']:
+        new_msg = {}
+        for key in msg:
+            if key not in ['pose', 'pose_frame', 'timestamp']:
+                new_msg[key] = msg[key]
+        header = {'stamp': msg['timestamp'], 'frame_id': msg['pose_frame']}
+        new_msg['pose'] = {'pose': msg['pose'], 'header': header}
+        return new_msg
+    elif rostype == 'rc_reason_msgs/RegionOfInterest3D':
+        new_msg = {}
+        new_msg['id'] = msg['id']
+        header = {'frame_id': msg['pose_frame']}
+        new_msg['pose'] = {'pose': msg['pose'], 'header': header}
+        if msg['type'] == 'BOX':
+            new_msg['primitive'] = {'type': 1, 'dimensions': [msg['box']['x'], msg['box']['y'], msg['box']['z']]}
+        elif msg['type'] == 'SPHERE':
+            new_msg['primitive'] = {'type': 2, 'dimensions': [msg['sphere']['radius']]}
+        return new_msg
+
+    # no mapping required, return auto-generated one
     return msg
