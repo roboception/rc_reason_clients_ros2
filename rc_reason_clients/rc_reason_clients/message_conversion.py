@@ -35,6 +35,7 @@ import rclpy
 from rclpy.clock import ROSClock
 
 import numpy as np
+from array import array
 
 from rc_reason_clients import ros_loader
 from rc_reason_clients.custom_mappings import map_api2ros, map_ros2api
@@ -54,7 +55,7 @@ type_map = {
 primitive_types = [bool, int, float]
 string_types = (str,)
 
-list_types = [list, tuple]
+list_types = [list, tuple, array]
 array_types = [np.ndarray]
 ros_time_types = ["builtin_interfaces/Time", "builtin_interfaces/Duration"]
 ros_primitive_types = ["boolean", "byte", "char", "int8", "uint8", "int16",
@@ -63,7 +64,7 @@ ros_primitive_types = ["boolean", "byte", "char", "int8", "uint8", "int16",
 ros_header_types = ["Header", "std_msgs/Header", "roslib/Header"]
 ros_binary_types = ["uint8[]", "char[]"]
 array_braces = re.compile(r'\[[^\]]*\]')
-list_tokens = re.compile('<(.+?)>')
+list_tokens = re.compile(r'<(.+?)(, \d+)?>')
 ros_binary_types_list_braces = [("uint8[]", re.compile(r'uint8\[[^\]]*\]')),
                                 ("char[]", re.compile(r'char\[[^\]]*\]'))]
 
