@@ -29,7 +29,8 @@
 import rclpy
 
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
-from rc_reason_msgs.srv import SetLoadCarrier, GetLoadCarriers, DeleteLoadCarriers
+from rc_reason_msgs.srv import SetLoadCarrier, GetLoadCarriers, DeleteLoadCarriers, DetectLoadCarriers
+from rc_reason_msgs.srv import SetRegionOfInterest3D, GetRegionsOfInterest3D, DeleteRegionsOfInterest3D
 
 from rc_reason_clients.rest_client import RestClient
 
@@ -42,6 +43,10 @@ class PickClient(RestClient):
         self.srv = self.create_service(SetLoadCarrier, 'set_load_carrier', self.set_lc_cb)
         self.srv = self.create_service(GetLoadCarriers, 'get_load_carriers', self.get_lcs_cb)
         self.srv = self.create_service(DeleteLoadCarriers, 'delete_load_carriers', self.delete_lcs_cb)
+        self.srv = self.create_service(DetectLoadCarriers, 'detect_load_carriers', self.detect_lcs_cb)
+        self.srv = self.create_service(SetRegionOfInterest3D, 'set_region_of_interest', self.set_roi_cb)
+        self.srv = self.create_service(GetRegionsOfInterest3D, 'get_regions_of_interst', self.get_rois_cb)
+        self.srv = self.create_service(DeleteRegionsOfInterest3D, 'delete_regions_of_interest', self.delete_rois_cb)
 
     def set_lc_cb(self, request, response):
         self.call_rest_service('set_load_carrier', request, response)
@@ -53,6 +58,22 @@ class PickClient(RestClient):
 
     def delete_lcs_cb(self, request, response):
         self.call_rest_service('delete_load_carriers', request, response)
+        return response
+
+    def detect_lcs_cb(self, request, response):
+        self.call_rest_service('detect_load_carriers', request, response)
+        return response
+
+    def set_roi_cb(self, request, response):
+        self.call_rest_service('set_region_of_interest', request, response)
+        return response
+
+    def get_rois_cb(self, request, response):
+        self.call_rest_service('get_regions_of_interst', request, response)
+        return response
+
+    def delete_rois_cb(self, request, response):
+        self.call_rest_service('delete_regions_of_interest', request, response)
         return response
 
 

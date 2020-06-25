@@ -33,10 +33,11 @@ from rc_reason_clients.message_conversion import (
     populate_instance,
     type_map,
 )
-from rc_reason_msgs.msg import DetectedTag
-from shape_msgs.msg import Plane
+from rc_reason_msgs.msg import DetectedTag, Box
+from shape_msgs.msg import Plane, SolidPrimitive
 from rc_reason_msgs.srv import CalibrateBasePlane, GetBasePlaneCalibration
-from rc_reason_msgs.srv import SetLoadCarrier, GetLoadCarriers
+from rc_reason_msgs.srv import SetLoadCarrier, GetLoadCarriers, DetectLoadCarriers
+from rc_reason_msgs.srv import SetRegionOfInterest3D, GetRegionsOfInterest3D
 
 
 def compare_timestamp(ros_ts, ts):
@@ -202,12 +203,184 @@ def test_get_lcs():
     ros_res = GetLoadCarriers.Response()
     populate_instance(api_res, ros_res)
     ros_lc = ros_res.load_carriers[0]
-    api_lc = api_res['load_carriers'][0]
-    compare_pose(ros_lc.pose.pose, api_lc['pose'])
-    assert ros_lc.pose.header.frame_id == api_lc['pose_frame']
-    assert ros_lc.id == api_lc['id']
-    compare_primitives(ros_lc.inner_dimensions, api_lc['inner_dimensions'])
-    compare_primitives(ros_lc.outer_dimensions, api_lc['outer_dimensions'])
-    compare_primitives(ros_lc.rim_thickness, api_lc['rim_thickness'])
+    api_lc = api_res["load_carriers"][0]
+    compare_pose(ros_lc.pose.pose, api_lc["pose"])
+    assert ros_lc.pose.header.frame_id == api_lc["pose_frame"]
+    assert ros_lc.id == api_lc["id"]
+    compare_primitives(ros_lc.inner_dimensions, api_lc["inner_dimensions"])
+    compare_primitives(ros_lc.outer_dimensions, api_lc["outer_dimensions"])
+    compare_primitives(ros_lc.rim_thickness, api_lc["rim_thickness"])
     assert ros_res.return_code.value == api_res["return_code"]["value"]
     assert ros_res.return_code.message == api_res["return_code"]["message"]
+
+
+def test_set_lc():
+    ros_req = SetLoadCarrier.Request()
+    ros_req.load_carrier.id = "mylc"
+    ros_req.load_carrier.inner_dimensions = Box(x=0.8, y=0.2, z=0.8)
+    ros_req.load_carrier.outer_dimensions = Box(x=1.0, y=0.6, z=1.0)
+    api_req = extract_values(ros_req)
+    ros_lc = ros_req.load_carrier
+    api_lc = api_req["load_carrier"]
+    assert ros_lc.id == api_lc["id"]
+    assert ros_lc.pose.header.frame_id == api_lc["pose_frame"]
+    compare_pose(ros_lc.pose.pose, api_lc["pose"])
+    compare_primitives(ros_lc.inner_dimensions, api_lc["inner_dimensions"])
+    compare_primitives(ros_lc.outer_dimensions, api_lc["outer_dimensions"])
+    compare_primitives(ros_lc.rim_thickness, api_lc["rim_thickness"])
+    # don't send overfilled flag in set_load_carrier
+    assert "overfilled" not in api_lc
+
+
+def test_detect_lcs():
+    ros_req = DetectLoadCarriers.Request()
+    ros_req.load_carrier_ids = ["test"]
+    ros_req.pose_frame = "camera"
+    ros_req.region_of_interest_id = "my_roi"
+    api_req = extract_values(ros_req)
+    assert ros_req.load_carrier_ids == api_req["load_carrier_ids"]
+    assert ros_req.pose_frame == api_req["pose_frame"]
+    assert ros_req.region_of_interest_id == api_req["region_of_interest_id"]
+    assert "robot_pose" not in api_req
+
+    # check that API request contains robot pose if pose_frame is external
+    ros_req.pose_frame = "external"
+    api_req = extract_values(ros_req)
+    assert "robot_pose" in api_req
+
+    api_res = {
+        "timestamp": {"sec": 1581614679, "nsec": 917540309},
+        "load_carriers": [
+            {
+                "pose": {
+                    "position": {
+                        "y": -0.01687562098439693,
+                        "x": 0.11888062561732585,
+                        "z": 0.8873076959237803,
+                    },
+                    "orientation": {
+                        "y": -0.046329159479736336,
+                        "x": 0.9986625754609102,
+                        "z": 0.006671112421383355,
+                        "w": 0.021958331489780644,
+                    },
+                },
+                "pose_frame": "camera",
+                "inner_dimensions": {"y": 0.27, "x": 0.37, "z": 0.14},
+                "outer_dimensions": {"y": 0.3, "x": 0.4, "z": 0.2},
+                "overfilled": True,
+                "rim_thickness": {"y": 0.0, "x": 0.0},
+                "id": "test",
+            }
+        ],
+        "return_code": {"message": "foo", "value": 123},
+    }
+    ros_res = DetectLoadCarriers.Response()
+    populate_instance(api_res, ros_res)
+    ros_lc = ros_res.load_carriers[0]
+    api_lc = api_res["load_carriers"][0]
+    compare_pose(ros_lc.pose.pose, api_lc["pose"])
+    assert ros_lc.pose.header.frame_id == api_lc["pose_frame"]
+    assert ros_lc.id == api_lc["id"]
+    assert ros_lc.overfilled == api_lc["overfilled"]
+    compare_primitives(ros_lc.inner_dimensions, api_lc["inner_dimensions"])
+    compare_primitives(ros_lc.outer_dimensions, api_lc["outer_dimensions"])
+    compare_primitives(ros_lc.rim_thickness, api_lc["rim_thickness"])
+    assert ros_res.return_code.value == api_res["return_code"]["value"]
+    assert ros_res.return_code.message == api_res["return_code"]["message"]
+    compare_timestamp(ros_res.timestamp, api_res["timestamp"])
+
+
+def test_set_roi_box():
+    ros_req = SetRegionOfInterest3D.Request()
+    ros_roi = ros_req.region_of_interest
+    ros_roi.id = "myroi"
+    ros_roi.pose.header.frame_id = "camera"
+    ros_roi.pose.pose.position.x = 1.0
+    ros_roi.pose.pose.orientation.w = 1.0
+    ros_roi.primitive = SolidPrimitive(type=SolidPrimitive.BOX)
+    ros_roi.primitive.dimensions = [1.0, 2.2, 3.0]
+
+    api_req = extract_values(ros_req)
+
+    api_roi = api_req["region_of_interest"]
+    assert ros_roi.id == api_roi["id"]
+    assert ros_roi.pose.header.frame_id == api_roi["pose_frame"]
+    compare_pose(ros_roi.pose.pose, api_roi["pose"])
+    assert api_roi["type"] == "BOX"
+    assert ros_roi.primitive.dimensions[0] == api_roi["box"]["x"]
+    assert ros_roi.primitive.dimensions[1] == api_roi["box"]["y"]
+    assert ros_roi.primitive.dimensions[2] == api_roi["box"]["z"]
+
+
+def test_set_roi_sphere():
+    ros_req = SetRegionOfInterest3D.Request()
+    ros_roi = ros_req.region_of_interest
+    ros_roi.id = "myroi"
+    ros_roi.pose.header.frame_id = "camera"
+    ros_roi.pose.pose.position.x = 1.0
+    ros_roi.pose.pose.orientation.w = 1.0
+    ros_roi.primitive = SolidPrimitive(type=SolidPrimitive.SPHERE)
+    ros_roi.primitive.dimensions = [1.1]
+
+    api_req = extract_values(ros_req)
+
+    api_roi = api_req["region_of_interest"]
+    assert ros_roi.id == api_roi["id"]
+    assert ros_roi.pose.header.frame_id == api_roi["pose_frame"]
+    compare_pose(ros_roi.pose.pose, api_roi["pose"])
+    assert api_roi["type"] == "SPHERE"
+    assert ros_roi.primitive.dimensions[0] == api_roi["sphere"]["radius"]
+
+
+def test_get_roi_box():
+    ros_req = GetRegionsOfInterest3D.Request()
+    ros_req.region_of_interest_ids = ["foo", "bar", "baz"]
+    api_req = extract_values(ros_req)
+    assert ros_req.region_of_interest_ids == api_req["region_of_interest_ids"]
+
+    api_res = {
+        "regions_of_interest": [
+            {
+                "box": {"x": 0.6, "y": 0.37, "z": 0.23},
+                "id": "test",
+                "pose": {
+                    "orientation": {"w": 1.0, "x": 0.0, "y": 0.0, "z": 0.0},
+                    "position": {"x": 0.06, "y": 0.0, "z": 0.83},
+                },
+                "pose_frame": "camera",
+                "type": "BOX",
+            },
+            {
+                "sphere": {"radius": 0.8},
+                "id": "test_external",
+                "pose": {
+                    "orientation": {
+                        "w": 0.7071067811865476,
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.7071067811865475,
+                    },
+                    "position": {"x": -0.1, "y": -0.5, "z": 0.5},
+                },
+                "pose_frame": "external",
+                "type": "SPHERE",
+            },
+        ],
+        "return_code": {"message": "", "value": 0},
+    }
+    ros_res = GetRegionsOfInterest3D.Response()
+    populate_instance(api_res, ros_res)
+    for i, ros_roi in enumerate(ros_res.regions_of_interest):
+        api_roi = api_res["regions_of_interest"][i]
+        assert ros_roi.id == api_roi["id"]
+        if api_roi["type"] == "BOX":
+            assert ros_roi.primitive.type == SolidPrimitive.BOX
+            assert len(ros_roi.primitive.dimensions) == 3
+            assert ros_roi.primitive.dimensions[0] == api_roi["box"]["x"]
+            assert ros_roi.primitive.dimensions[1] == api_roi["box"]["y"]
+            assert ros_roi.primitive.dimensions[2] == api_roi["box"]["z"]
+        elif api_roi["type"] == "SPHERE":
+            assert ros_roi.primitive.type == SolidPrimitive.SPHERE
+            assert len(ros_roi.primitive.dimensions) == 1
+            assert ros_roi.primitive.dimensions[0] == api_roi["sphere"]["radius"]
