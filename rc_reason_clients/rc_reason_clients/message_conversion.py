@@ -124,7 +124,7 @@ def msg_class_type_repr(msg_class):
 def _from_inst(inst, rostype):
     # Check for time or duration
     if rostype in ros_time_types:
-        return {"secs": inst.secs, "nsecs": inst.nsecs}
+        return {"sec": inst.sec, "nsec": inst.nanosec}
 
     # Check for primitive types
     if rostype in ros_primitive_types:
