@@ -5,7 +5,7 @@ ROS2 clients for interfacing via REST with the [Roboception rc_visard](https://r
 
 Please also consult the manual for more details: https://doc.rc-visard.com
 
-For details on the client nodes, see the [rc_reason_clients README](rc_reason_client/README.md).
+For details on the client nodes, see the [rc_reason_clients README](rc_reason_clients/README.md).
 
 Acknowledgements
 ----------------
