@@ -99,21 +99,25 @@ class RestClient(Node):
         success = self.set_rest_parameters([{'name': p.name, 'value': p.value} for p in parameters])
         return SetParametersResult(successful=success)
 
-    def call_rest_service(self, service, request, response):
+    def call_rest_service(self, service, request=None, response=None):
         try:
-            args = extract_values(request)
-            self.get_logger().info(f'args: {args}')
+            args = {}
+            if request is not None:
+                args = extract_values(request)
+                self.get_logger().debug(f'args: {args}')
 
             url = f'http://{self.host}/api/v1/nodes/{self.rest_name}/services/{service}'
             res = requests_retry_session().put(url, json={'args': args})
 
             j = res.json()
-            self.get_logger().info(f"rest response: {json.dumps(j, indent=2)}")
-            populate_instance(j['response'], response)
+            self.get_logger().debug(f"rest response: {json.dumps(j, indent=2)}")
+            if response is not None:
+                populate_instance(j['response'], response)
         except Exception as e:
             self.get_logger().error(str(e))
-            response.return_code.value = -1000
-            response.return_code.message = str(e)
+            if response is not None:
+                response.return_code.value = -1000
+                response.return_code.message = str(e)
 
     def get_rest_parameters(self):
         try:
@@ -132,7 +136,7 @@ class RestClient(Node):
             url = f'http://{self.host}/api/v1/nodes/{self.rest_name}/parameters'
             res = requests_retry_session().put(url, json=parameters)
             j = res.json()
-            self.get_logger().info(f"rest response: {json.dumps(j, indent=2)}")
+            self.get_logger().debug(f"rest response: {json.dumps(j, indent=2)}")
             if 'return_code' in j and j['return_code']['value'] != 0:
                 self.get_logger().warn(f"Setting parameter failed: {j['return_code']['message']}")
                 return False

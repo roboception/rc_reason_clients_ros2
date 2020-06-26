@@ -42,6 +42,8 @@ class PickClient(RestClient):
     def __init__(self, rest_name):
         super().__init__(rest_name)
 
+        self.call_rest_service('start')
+
         self.srv = self.create_service(SetLoadCarrier, 'set_load_carrier', self.set_lc_cb)
         self.srv = self.create_service(GetLoadCarriers, 'get_load_carriers', self.get_lcs_cb)
         self.srv = self.create_service(DeleteLoadCarriers, 'delete_load_carriers', self.delete_lcs_cb)
@@ -50,6 +52,9 @@ class PickClient(RestClient):
         self.srv = self.create_service(DeleteRegionsOfInterest3D, 'delete_regions_of_interest', self.delete_rois_cb)
         self.srv = self.create_service(DetectLoadCarriers, 'detect_load_carriers', self.detect_lcs_cb)
         self.srv = self.create_service(DetectFillingLevel, 'detect_filling_level', self.detect_filling_level_cb)
+
+    def stop(self):
+        self.call_rest_service('stop')
 
     def set_lc_cb(self, request, response):
         self.call_rest_service('set_load_carrier', request, response)
@@ -122,6 +127,8 @@ def main(args=None, rest_node='rc_itempick'):
         client.get_logger().error(f'unknown rest_node {rest_node}')
         rclpy.shutdown()
         exit(1)
+
+    rclpy.get_default_context().on_shutdown(client.stop)
 
     host = client.get_parameter('host').value
     if not host:

@@ -39,7 +39,12 @@ class TagClient(RestClient):
     def __init__(self, rest_name):
         super().__init__(rest_name)
 
+        self.call_rest_service('start')
+
         self.srv = self.create_service(DetectTags, 'detect', self.detect_callback)
+
+    def stop(self):
+        self.call_rest_service('stop')
 
     def detect_callback(self, request, response):
         self.get_logger().info('Incoming detect request')
@@ -51,6 +56,8 @@ def main(args=None, rest_node='rc_april_tag_detect'):
     rclpy.init(args=args)
 
     client = TagClient(rest_node)
+
+    rclpy.get_default_context().on_shutdown(client.stop)
 
     host = client.get_parameter('host').value
     if not host:
