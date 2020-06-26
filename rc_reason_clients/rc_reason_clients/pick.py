@@ -44,14 +44,14 @@ class PickClient(RestClient):
 
         self.call_rest_service('start')
 
-        self.srv = self.create_service(SetLoadCarrier, 'set_load_carrier', self.set_lc_cb)
-        self.srv = self.create_service(GetLoadCarriers, 'get_load_carriers', self.get_lcs_cb)
-        self.srv = self.create_service(DeleteLoadCarriers, 'delete_load_carriers', self.delete_lcs_cb)
-        self.srv = self.create_service(SetRegionOfInterest3D, 'set_region_of_interest', self.set_roi_cb)
-        self.srv = self.create_service(GetRegionsOfInterest3D, 'get_regions_of_interst', self.get_rois_cb)
-        self.srv = self.create_service(DeleteRegionsOfInterest3D, 'delete_regions_of_interest', self.delete_rois_cb)
-        self.srv = self.create_service(DetectLoadCarriers, 'detect_load_carriers', self.detect_lcs_cb)
-        self.srv = self.create_service(DetectFillingLevel, 'detect_filling_level', self.detect_filling_level_cb)
+        self.srv = self.create_service(SetLoadCarrier, self.get_name() + '/set_load_carrier', self.set_lc_cb)
+        self.srv = self.create_service(GetLoadCarriers, self.get_name() + '/get_load_carriers', self.get_lcs_cb)
+        self.srv = self.create_service(DeleteLoadCarriers, self.get_name() + '/delete_load_carriers', self.delete_lcs_cb)
+        self.srv = self.create_service(SetRegionOfInterest3D, self.get_name() + '/set_region_of_interest', self.set_roi_cb)
+        self.srv = self.create_service(GetRegionsOfInterest3D, self.get_name() + '/get_regions_of_interst', self.get_rois_cb)
+        self.srv = self.create_service(DeleteRegionsOfInterest3D, self.get_name() + '/delete_regions_of_interest', self.delete_rois_cb)
+        self.srv = self.create_service(DetectLoadCarriers, self.get_name() + '/detect_load_carriers', self.detect_lcs_cb)
+        self.srv = self.create_service(DetectFillingLevel, self.get_name() + '/detect_filling_level', self.detect_filling_level_cb)
 
     def stop(self):
         self.call_rest_service('stop')
@@ -93,7 +93,7 @@ class ItemPickClient(PickClient):
 
     def __init__(self, rest_name):
         super().__init__(rest_name)
-        self.srv = self.create_service(ComputeGrasps, 'compute_grasps', self.compute_grasps_cb)
+        self.srv = self.create_service(ComputeGrasps, self.get_name() + '/compute_grasps', self.compute_grasps_cb)
 
     def compute_grasps_cb(self, request, response):
         self.call_rest_service('compute_grasps', request, response)
@@ -104,8 +104,8 @@ class BoxPickClient(PickClient):
 
     def __init__(self, rest_name):
         super().__init__(rest_name)
-        self.srv = self.create_service(ComputeGrasps, 'compute_grasps', self.compute_grasps_cb)
-        self.srv = self.create_service(DetectItems, 'detect_items', self.detect_items_cb)
+        self.srv = self.create_service(ComputeGrasps, self.get_name() + '/compute_grasps', self.compute_grasps_cb)
+        self.srv = self.create_service(DetectItems, self.get_name() + '/detect_items', self.detect_items_cb)
 
     def compute_grasps_cb(self, request, response):
         self.call_rest_service('compute_grasps', request, response)
