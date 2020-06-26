@@ -73,7 +73,10 @@ def parameter_descriptor_from_rest(p):
         pd.integer_range = [IntegerRange(from_value=p['min'], to_value=p['max'], step=1)]
     elif p['type'] in type_map['float']:
         pd.type = ParameterType.PARAMETER_DOUBLE
-        pd.floating_point_range = [FloatingPointRange(from_value=p['min'], to_value=p['max'], step=0.001)]
+        # try to infer sensible step size
+        fractions = max([len(repr(p[k]).split('.')[1]) for k in ['min', 'max', 'value']])
+        step = 1.0 / pow(10, fractions)
+        pd.floating_point_range = [FloatingPointRange(from_value=p['min'], to_value=p['max'], step=step)]
     return pd
 
 
