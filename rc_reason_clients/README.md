@@ -84,3 +84,24 @@ See the [BoxPick documentation](https://doc.rc-visard.com/latest/en/itempick.htm
 
 To run the client:
 `ros2 run rc_reason_clients rc_silhouettematch_client --ros-args --param host:=10.0.2.40`
+
+rc_hand_eye_calibration_client
+------------------------------
+
+Client to interface with HandEyeCalibration running on the device.
+The hand-eye calibration is published via TF2 (on `/tf_static`) at startup and when a new calibration is performed or requested.
+
+See the [HandEyeCalibration documentation](https://doc.rc-visard.com/latest/en/handeye_calibration.html) for details.
+
+[HandEyeCalibration parameters](https://doc.rc-visard.com/latest/en/handeye_calibration.html#parameters)
+
+The client has the additional parameters for publishing via TF2:
+
+* `camera_frame_id`: Name of the frame on the camera (default: "camera")
+* `end_effector_frame_id`: Name of the frame calibrated to when using a robot_mounted camera (default: "end_effector")
+* `base_frame_id`: Name of the frame calibrated to when using a statically (externally) mounted camera (default: "base_link")
+
+[HandEyeCalibration services](https://doc.rc-visard.com/latest/en/handeye_calibration.html#services)
+
+To run the client:
+`ros2 run rc_reason_clients rc_hand_eye_calibration_client --ros-args --param host:=10.0.2.40`
