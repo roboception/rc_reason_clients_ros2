@@ -42,7 +42,7 @@ class PickClient(RestClient):
     def __init__(self, rest_name):
         super().__init__(rest_name)
 
-        self.call_rest_service('start')
+        self.start()
 
         self.srv = self.create_service(SetLoadCarrier, self.get_name() + '/set_load_carrier', self.set_lc_cb)
         self.srv = self.create_service(GetLoadCarriers, self.get_name() + '/get_load_carriers', self.get_lcs_cb)
@@ -53,7 +53,12 @@ class PickClient(RestClient):
         self.srv = self.create_service(DetectLoadCarriers, self.get_name() + '/detect_load_carriers', self.detect_lcs_cb)
         self.srv = self.create_service(DetectFillingLevel, self.get_name() + '/detect_filling_level', self.detect_filling_level_cb)
 
+    def start(self):
+        self.get_logger().info(f"starting {self.rest_name}")
+        self.call_rest_service('start')
+
     def stop(self):
+        self.get_logger().info(f"stopping {self.rest_name}")
         self.call_rest_service('stop')
 
     def set_lc_cb(self, request, response):

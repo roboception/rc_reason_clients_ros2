@@ -117,6 +117,9 @@ class RestClient(Node):
             self.get_logger().debug(f"rest response: {json.dumps(j, indent=2)}")
             if response is not None:
                 populate_instance(j['response'], response)
+            rc = j['response'].get('return_code')
+            if rc is not None and rc['value'] < 0:
+                self.get_logger().warn(f"service {service} returned an error: [{rc['value']}] {rc['message']}")
         except Exception as e:
             self.get_logger().error(str(e))
             if response is not None and hasattr(response, 'return_code'):

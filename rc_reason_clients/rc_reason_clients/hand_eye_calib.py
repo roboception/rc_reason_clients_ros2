@@ -97,34 +97,48 @@ class HandEyeCalibClient(RestClient):
         self.call_rest_service('calibrate', request, response)
         if response.success:
             self.pub_hand_eye(response.pose, response.robot_mounted)
+        else:
+            self.get_logger().warn(response.message)
         return response
 
     def get_calib_cb(self, request, response):
         self.call_rest_service('get_calibration', request, response)
         if response.success:
             self.pub_hand_eye(response.pose, response.robot_mounted)
+        else:
+            self.get_logger().warn(response.message)
         return response
 
     def set_calib_cb(self, request, response):
         self.call_rest_service('set_calibration', request, response)
         if response.success:
             self.pub_hand_eye(request.pose, request.robot_mounted)
+        else:
+            self.get_logger().warn(response.message)
         return response
 
     def save_calib_cb(self, request, response):
         self.call_rest_service('save_calibration', request, response)
+        if not response.success:
+            self.get_logger().warn(response.message)
         return response
 
     def delete_calib_cb(self, request, response):
         self.call_rest_service('delete_calibration', request, response)
+        if not response.success:
+            self.get_logger().warn(response.message)
         return response
 
     def reset_calib_cb(self, request, response):
         self.call_rest_service('reset_calibration', request, response)
+        if not response.success:
+            self.get_logger().warn(response.message)
         return response
 
     def set_pose_cb(self, request, response):
         self.call_rest_service('set_pose', request, response)
+        if not response.success:
+            self.get_logger().warn(response.message)
         return response
 
     def pub_hand_eye(self, pose, robot_mounted):
