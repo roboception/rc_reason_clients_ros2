@@ -45,13 +45,13 @@ class SilhouetteMatchClient(RestClient):
     def __init__(self):
         super().__init__('rc_silhouettematch')
 
-        self.srv = self.create_service(SilhouetteMatchDetectObject, self.get_name() + 'detect_object', self.detect_cb)
-        self.srv = self.create_service(CalibrateBasePlane, self.get_name() + 'calibrate_base_plane', self.calibrate_cb)
-        self.srv = self.create_service(GetBasePlaneCalibration, self.get_name() + 'get_base_plane_calibration', self.get_calib_cb)
-        self.srv = self.create_service(DeleteBasePlaneCalibration, self.get_name() + 'delete_base_plane_calibration', self.delete_calib_cb)
-        self.srv = self.create_service(GetRegionsOfInterest2D, self.get_name() + 'get_regions_of_interest_2d', self.get_rois_cb)
-        self.srv = self.create_service(SetRegionOfInterest2D, self.get_name() + 'set_region_of_interest_2d', self.set_roi_cb)
-        self.srv = self.create_service(DeleteRegionsOfInterest2D, self.get_name() + 'delete_regions_of_interest_2d', self.delete_rois_cb)
+        self.srv = self.create_service(SilhouetteMatchDetectObject, self.get_name() + '/detect_object', self.detect_cb)
+        self.srv = self.create_service(CalibrateBasePlane, self.get_name() + '/calibrate_base_plane', self.calibrate_cb)
+        self.srv = self.create_service(GetBasePlaneCalibration, self.get_name() + '/get_base_plane_calibration', self.get_calib_cb)
+        self.srv = self.create_service(DeleteBasePlaneCalibration, self.get_name() + '/delete_base_plane_calibration', self.delete_calib_cb)
+        self.srv = self.create_service(GetRegionsOfInterest2D, self.get_name() + '/get_regions_of_interest_2d', self.get_rois_cb)
+        self.srv = self.create_service(SetRegionOfInterest2D, self.get_name() + '/set_region_of_interest_2d', self.set_roi_cb)
+        self.srv = self.create_service(DeleteRegionsOfInterest2D, self.get_name() + '/delete_regions_of_interest_2d', self.delete_rois_cb)
 
     def detect_cb(self, request, response):
         self.call_rest_service('detect_object', request, response)

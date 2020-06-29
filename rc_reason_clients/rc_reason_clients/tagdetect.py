@@ -41,7 +41,7 @@ class TagClient(RestClient):
 
         self.call_rest_service('start')
 
-        self.srv = self.create_service(DetectTags, self.get_name() + 'detect', self.detect_callback)
+        self.srv = self.create_service(DetectTags, self.get_name() + '/detect', self.detect_callback)
 
     def stop(self):
         self.call_rest_service('stop')
