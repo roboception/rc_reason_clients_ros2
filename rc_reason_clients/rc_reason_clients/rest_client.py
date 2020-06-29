@@ -115,7 +115,7 @@ class RestClient(Node):
                 populate_instance(j['response'], response)
         except Exception as e:
             self.get_logger().error(str(e))
-            if response is not None:
+            if response is not None and hasattr(response, 'return_code'):
                 response.return_code.value = -1000
                 response.return_code.message = str(e)
 
