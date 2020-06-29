@@ -90,14 +90,18 @@ class RestClient(Node):
 
     def declare_rest_parameters(self):
         rest_params = self.get_rest_parameters()
+        self.rest_param_names = [p['name'] for p in rest_params]
         def to_ros_param(p):
             return (p['name'], p['value'], parameter_descriptor_from_rest(p))
         parameters = [to_ros_param(p) for p in rest_params]
         self.declare_parameters('', parameters)
 
     def params_callback(self, parameters):
-        success = self.set_rest_parameters([{'name': p.name, 'value': p.value} for p in parameters])
-        return SetParametersResult(successful=success)
+        new_rest_params = [{'name': p.name, 'value': p.value} for p in parameters if p.name in self.rest_param_names]
+        if new_rest_params:
+            success = self.set_rest_parameters(new_rest_params)
+            return SetParametersResult(successful=success)
+        return SetParametersResult(successful=True)
 
     def call_rest_service(self, service, request=None, response=None):
         try:
