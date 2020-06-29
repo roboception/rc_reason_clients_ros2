@@ -81,13 +81,17 @@ def assert_primitives(ros, api):
             assert api[field_name] == getattr(ros, field_name)
 
 
-def assert_lc(ros_lc, api_lc):
+def assert_lc(ros_lc, api_lc, timestamp=None):
     assert_pose(ros_lc.pose.pose, api_lc["pose"])
     assert ros_lc.pose.header.frame_id == api_lc["pose_frame"]
+    if timestamp is not None:
+        assert_timestamp(ros_lc.pose.header.stamp, timestamp)
     assert ros_lc.id == api_lc["id"]
     assert_primitives(ros_lc.inner_dimensions, api_lc["inner_dimensions"])
     assert_primitives(ros_lc.outer_dimensions, api_lc["outer_dimensions"])
     assert_primitives(ros_lc.rim_thickness, api_lc["rim_thickness"])
+    if "overfilled" in api_lc:
+        assert ros_lc.overfilled == api_lc["overfilled"]
 
 
 def assert_grasp(ros_grasp, api_grasp):
@@ -303,8 +307,7 @@ def test_detect_lcs():
 
     ros_lc = ros_res.load_carriers[0]
     api_lc = api_res["load_carriers"][0]
-    assert_lc(ros_lc, api_lc)
-    assert ros_lc.overfilled == api_lc["overfilled"]
+    assert_lc(ros_lc, api_lc, api_res["timestamp"])
     assert ros_res.return_code.value == api_res["return_code"]["value"]
     assert ros_res.return_code.message == api_res["return_code"]["message"]
     assert_timestamp(ros_res.timestamp, api_res["timestamp"])
@@ -623,8 +626,7 @@ def test_compute_grasps():
     populate_instance(api_res, ros_res)
     ros_lc = ros_res.load_carriers[0]
     api_lc = api_res["load_carriers"][0]
-    assert_lc(ros_lc, api_lc)
-    assert ros_lc.overfilled == api_lc["overfilled"]
+    assert_lc(ros_lc, api_lc, api_res['timestamp'])
     for i, ros_grasp in enumerate(ros_res.grasps):
         api_grasp = api_res["grasps"][i]
         assert_grasp(ros_grasp, api_grasp)
@@ -743,7 +745,7 @@ def test_detect_items():
     populate_instance(api_res, ros_res)
     ros_lc = ros_res.load_carriers[0]
     api_lc = api_res["load_carriers"][0]
-    assert_lc(ros_lc, api_lc)
+    assert_lc(ros_lc, api_lc, api_res['timestamp'])
     assert ros_lc.overfilled == api_lc["overfilled"]
     for i, ros_item in enumerate(ros_res.items):
         api_item = api_res["items"][i]

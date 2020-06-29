@@ -102,6 +102,21 @@ def map_ros2api(msg, rostype):
     return msg
 
 
+def _to_ros_pose_stamped(msg, timestamp=None):
+    if 'pose_frame' not in msg:
+        return msg
+    new_msg = {}
+    for key in msg:
+        if key not in ['pose', 'pose_frame', 'timestamp']:
+            new_msg[key] = msg[key]
+    header = {'frame_id': msg['pose_frame']}
+    stamp = msg.get('timestamp', timestamp)
+    if stamp is not None:
+        header['stamp'] = stamp
+    new_msg['pose'] = {'pose': msg['pose'], 'header': header}
+    return new_msg
+
+
 def map_api2ros(msg, rostype):
     """ Map an API msg to ROS """
     if rostype == 'rc_reason_msgs/DetectedTag':
@@ -119,13 +134,19 @@ def map_api2ros(msg, rostype):
         new_msg['pose_frame'] = msg['plane']['pose_frame']
         del new_msg['plane']['pose_frame']
         return new_msg
-    elif rostype in ['rc_reason_msgs/LoadCarrier', 'rc_reason_msgs/LoadCarrierWithFillingLevel']:
+    elif rostype in ['rc_reason_msgs/LoadCarrier']:
+        return _to_ros_pose_stamped(msg)
+    elif rostype in ['rc_reason_msgs/ComputeGrasps_Response',
+                     'rc_reason_msgs/DetectFillingLevel_Response',
+                     'rc_reason_msgs/DetectLoadCarriers_Response',
+                     'rc_reason_msgs/DetectItems_Response']:
         new_msg = {}
         for key in msg:
-            if key not in ['pose', 'pose_frame']:
-                new_msg[key] = msg[key]
-        header = {'frame_id': msg['pose_frame']}
-        new_msg['pose'] = {'pose': msg['pose'], 'header': header}
+            if key not in ['load_carriers']:
+                    new_msg[key] = msg[key]
+        new_msg['load_carriers'] = []
+        for lc in msg['load_carriers']:
+            new_msg['load_carriers'].append(_to_ros_pose_stamped(lc, msg['timestamp']))
         return new_msg
     elif rostype in ['rc_reason_msgs/SuctionGrasp']:
         new_msg = {}
@@ -136,13 +157,7 @@ def map_api2ros(msg, rostype):
         new_msg['pose'] = {'pose': msg['pose'], 'header': header}
         return new_msg
     elif rostype in ['rc_reason_msgs/Item']:
-        new_msg = {}
-        for key in msg:
-            if key not in ['pose', 'pose_frame', 'timestamp']:
-                new_msg[key] = msg[key]
-        header = {'stamp': msg['timestamp'], 'frame_id': msg['pose_frame']}
-        new_msg['pose'] = {'pose': msg['pose'], 'header': header}
-        return new_msg
+        return _to_ros_pose_stamped(msg)
     elif rostype == 'rc_reason_msgs/RegionOfInterest3D':
         new_msg = {}
         new_msg['id'] = msg['id']
