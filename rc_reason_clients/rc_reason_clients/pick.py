@@ -28,6 +28,10 @@
 
 import rclpy
 
+from rclpy.qos import QoSProfile
+from tf2_msgs.msg import TFMessage
+from geometry_msgs.msg import TransformStamped
+
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from rc_reason_msgs.srv import SetLoadCarrier, GetLoadCarriers, DeleteLoadCarriers
 from rc_reason_msgs.srv import SetRegionOfInterest3D, GetRegionsOfInterest3D, DeleteRegionsOfInterest3D
@@ -37,10 +41,58 @@ from rc_reason_msgs.srv import ComputeGrasps, DetectItems
 from rc_reason_clients.rest_client import RestClient
 
 
+def load_carrier_to_tf(lc, postfix):
+    tf = TransformStamped()
+    tf.header.frame_id = lc.pose.header.frame_id
+    tf.child_frame_id = f"lc_{postfix}"
+    tf.header.stamp = lc.pose.header.stamp
+    tf.transform.translation.x = lc.pose.pose.position.x
+    tf.transform.translation.y = lc.pose.pose.position.y
+    tf.transform.translation.z = lc.pose.pose.position.z
+    tf.transform.rotation = lc.pose.pose.orientation
+    return tf
+
+
+def grasp_to_tf(grasp, postfix):
+    tf = TransformStamped()
+    tf.header.frame_id = grasp.pose.header.frame_id
+    tf.child_frame_id = f"grasp_{postfix}"
+    tf.header.stamp = grasp.pose.header.stamp
+    tf.transform.translation.x = grasp.pose.pose.position.x
+    tf.transform.translation.y = grasp.pose.pose.position.y
+    tf.transform.translation.z = grasp.pose.pose.position.z
+    tf.transform.rotation = grasp.pose.pose.orientation
+    return tf
+
+
+def item_to_tf(item, postfix):
+    tf = TransformStamped()
+    tf.header.frame_id = item.pose.header.frame_id
+    tf.child_frame_id = f"boxitem_{postfix}"
+    tf.header.stamp = item.pose.header.stamp
+    tf.transform.translation.x = item.pose.pose.position.x
+    tf.transform.translation.y = item.pose.pose.position.y
+    tf.transform.translation.z = item.pose.pose.position.z
+    tf.transform.rotation = item.pose.pose.orientation
+    return tf
+
+
 class PickClient(RestClient):
 
     def __init__(self, rest_name):
         super().__init__(rest_name)
+
+        # client only parameters
+        self.declare_parameter(
+            "publish_tf",
+            True,
+            ParameterDescriptor(
+                type=ParameterType.PARAMETER_BOOL,
+                description="Publish detected loadcarriers and items via TF"
+            )
+        )
+
+        self.pub_tf = self.create_publisher(TFMessage, "/tf", QoSProfile(depth=100))
 
         self.start()
 
@@ -87,11 +139,29 @@ class PickClient(RestClient):
 
     def detect_lcs_cb(self, request, response):
         self.call_rest_service('detect_load_carriers', request, response)
+        self.pub_lcs(response.load_carriers)
         return response
 
     def detect_filling_level_cb(self, request, response):
         self.call_rest_service('detect_filling_level', request, response)
+        self.pub_lcs(response.load_carriers)
         return response
+
+    def pub_lcs(self, lcs):
+        if not lcs:
+            return
+        if not self.get_parameter('publish_tf').value:
+            return
+        transforms = [load_carrier_to_tf(lc, i) for i, lc in enumerate(lcs)]
+        self.pub_tf.publish(TFMessage(transforms=transforms))
+
+    def pub_grasps(self, grasps):
+        if not grasps:
+            return
+        if not self.get_parameter('publish_tf').value:
+            return
+        transforms = [grasp_to_tf(grasp, i) for i, grasp in enumerate(grasps)]
+        self.pub_tf.publish(TFMessage(transforms=transforms))
 
 
 class ItemPickClient(PickClient):
@@ -102,6 +172,8 @@ class ItemPickClient(PickClient):
 
     def compute_grasps_cb(self, request, response):
         self.call_rest_service('compute_grasps', request, response)
+        self.pub_lcs(response.load_carriers)
+        self.pub_grasps(response.grasps)
         return response
 
 
@@ -114,11 +186,24 @@ class BoxPickClient(PickClient):
 
     def compute_grasps_cb(self, request, response):
         self.call_rest_service('compute_grasps', request, response)
+        self.pub_lcs(response.load_carriers)
+        self.pub_grasps(response.grasps)
+        self.pub_items(response.items)
         return response
 
     def detect_items_cb(self, request, response):
         self.call_rest_service('detect_items', request, response)
+        self.pub_lcs(response.load_carriers)
+        self.pub_items(response.items)
         return response
+
+    def pub_items(self, items):
+        if not items:
+            return
+        if not self.get_parameter('publish_tf').value:
+            return
+        transforms = [item_to_tf(item, i) for i, item in enumerate(items)]
+        self.pub_tf.publish(TFMessage(transforms=transforms))
 
 
 def main(args=None, rest_node='rc_itempick'):
