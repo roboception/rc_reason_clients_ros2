@@ -535,6 +535,14 @@ def test_compute_grasps():
     api_req = extract_values(ros_req)
     assert ros_req.region_of_interest_id == api_req["region_of_interest_id"]
     assert ros_req.load_carrier_id == api_req["load_carrier_id"]
+    assert "load_carrier_compartment" not in api_req
+    assert "collision_detection" not in api_req
+
+    # add valid compartment
+    ros_req.load_carrier_compartment.box.x = 0.1
+    ros_req.load_carrier_compartment.box.y = 0.2
+    ros_req.load_carrier_compartment.box.z = 0.3
+    api_req = extract_values(ros_req)
     assert_primitives(
         ros_req.load_carrier_compartment, api_req["load_carrier_compartment"]
     )
@@ -668,6 +676,13 @@ def test_detect_items():
     api_req = extract_values(ros_req)
     assert ros_req.region_of_interest_id == api_req["region_of_interest_id"]
     assert ros_req.load_carrier_id == api_req["load_carrier_id"]
+    assert "load_carrier_compartment" not in api_req
+
+    # add valid compartment
+    ros_req.load_carrier_compartment.box.x = 0.1
+    ros_req.load_carrier_compartment.box.y = 0.2
+    ros_req.load_carrier_compartment.box.z = 0.3
+    api_req = extract_values(ros_req)
     assert_primitives(
         ros_req.load_carrier_compartment, api_req["load_carrier_compartment"]
     )
