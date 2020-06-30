@@ -36,10 +36,11 @@ See the [TagDetect documentation](https://doc.rc-visard.com/latest/en/tagdetect.
 
 [TagDetect parameters](https://doc.rc-visard.com/latest/en/tagdetect.html#parameters)
 
-The clients have an additional parameter to enable publishing of detected tags on `/tf`.
+The clients have additional parameters to enable publishing of detected tags on `/tf` or as markers.
 The child_frame_id is set to `<tagId>_<instanceId>`.
 
 * `publish_tf`: Publish detected tags on tf (default: True)
+* `publish_markers`: Publish detected tags as visualization markers (default: True)
 
 [TagDetect services](https://doc.rc-visard.com/latest/en/tagdetect.html#services)
 

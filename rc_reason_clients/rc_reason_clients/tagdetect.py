@@ -34,6 +34,8 @@ from geometry_msgs.msg import TransformStamped
 
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from rc_reason_msgs.srv import DetectTags
+from visualization_msgs.msg import Marker, MarkerArray
+from std_msgs.msg import ColorRGBA
 
 from rc_reason_clients.rest_client import RestClient
 
@@ -64,8 +66,18 @@ class TagClient(RestClient):
                 description="Publish detected tags via TF"
             )
         )
+        self.declare_parameter(
+            "publish_markers",
+            True,
+            ParameterDescriptor(
+                type=ParameterType.PARAMETER_BOOL,
+                description="Publish detected tags as visalization markers"
+            )
+        )
+        self.tag_markers = []
 
         self.pub_tf = self.create_publisher(TFMessage, "/tf", QoSProfile(depth=100))
+        self.pub_markers = self.create_publisher(MarkerArray, "visualization_marker_array", QoSProfile(depth=10))
 
         self.start()
 
@@ -81,17 +93,46 @@ class TagClient(RestClient):
 
     def detect_callback(self, request, response):
         self.call_rest_service('detect', request, response)
-        self.pub_tags(response.tags)
+        self.publish_tags(response.tags)
         return response
 
-    def pub_tags(self, tags):
-        if not tags:
-            return
-        if not self.get_parameter('publish_tf').value:
-            return
-        transforms = [tag_to_tf(tag) for tag in tags]
-        self.pub_tf.publish(TFMessage(transforms=transforms))
+    def publish_tags(self, tags):
+        if tags and self.get_parameter('publish_tf').value:
+            transforms = [tag_to_tf(tag) for tag in tags]
+            self.pub_tf.publish(TFMessage(transforms=transforms))
+        if self.get_parameter('publish_markers').value:
+            self.publish_tag_markers(tags)
 
+    def publish_tag_markers(self, tags):
+        def create_marker(tag, id):
+            m = Marker(action=Marker.ADD, type=Marker.CUBE)
+            m.color = ColorRGBA(r=0.0, g=1.0, b=0.0, a=0.5)
+            m.header.stamp = tag.pose.header.stamp
+            m.header.frame_id = f"{tag.tag.id}_{tag.instance_id}"
+            m.pose.orientation.w = 1.0
+            m.pose.position.x = tag.tag.size / 2
+            m.pose.position.y = tag.tag.size / 2
+            m.pose.position.z = 0.001 / 2
+            m.scale.x = tag.tag.size
+            m.scale.y = tag.tag.size
+            m.scale.z = 0.001
+            m.id = i
+            m.ns = f"{self.rest_name}_tags"
+            return m
+
+        new_markers = []
+        for i, tag in enumerate(tags):
+            m = create_marker(tag, i)
+            if i < len(self.tag_markers):
+                self.tag_markers[i] = m
+            else:
+                self.tag_markers.append(m)
+            new_markers.append(m)
+        for i in range(len(tags), len(self.tag_markers)):
+            # delete old markers
+            self.tag_markers[i].action = Marker.DELETE
+        self.pub_markers.publish(MarkerArray(markers=self.tag_markers))
+        self.tag_markers = new_markers
 
 
 def main(args=None, rest_node='rc_april_tag_detect'):
