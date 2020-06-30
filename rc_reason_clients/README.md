@@ -77,6 +77,10 @@ See the [ItemPick documentation](https://doc.rc-visard.com/latest/en/itempick.ht
 
 [ItemPick parameters](https://doc.rc-visard.com/latest/en/itempick.html#parameters)
 
+The client has an additional parameter to enable publishing of detected load carriers and grasps on `/tf`.
+
+* `publish_tf`: Publish detected instances on tf (default: True)
+
 [ItemPick services](https://doc.rc-visard.com/latest/en/itempick.html#services)
 
 To run the client:
@@ -89,6 +93,10 @@ Client to interface with BoxPick running on the device.
 See the [BoxPick documentation](https://doc.rc-visard.com/latest/en/itempick.html) for details.
 
 [BoxPick parameters](https://doc.rc-visard.com/latest/en/itempick.html#parameters)
+
+The client has an additional parameter to enable publishing of detected load carriers, grasps and items on `/tf`.
+
+* `publish_tf`: Publish detected instances on tf (default: True)
 
 [BoxPick services](https://doc.rc-visard.com/latest/en/itempick.html#services)
 
