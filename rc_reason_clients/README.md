@@ -77,9 +77,10 @@ See the [ItemPick documentation](https://doc.rc-visard.com/latest/en/itempick.ht
 
 [ItemPick parameters](https://doc.rc-visard.com/latest/en/itempick.html#parameters)
 
-The client has an additional parameter to enable publishing of detected load carriers and grasps on `/tf`.
+The client has an additional parameters to enable publishing of detected load carriers and grasps on `/tf` or as markers:
 
 * `publish_tf`: Publish detected instances on tf (default: True)
+* `publish_markers`: Publish detected instances as visualization markers (default: True)
 
 [ItemPick services](https://doc.rc-visard.com/latest/en/itempick.html#services)
 
@@ -94,9 +95,10 @@ See the [BoxPick documentation](https://doc.rc-visard.com/latest/en/itempick.htm
 
 [BoxPick parameters](https://doc.rc-visard.com/latest/en/itempick.html#parameters)
 
-The client has an additional parameter to enable publishing of detected load carriers, grasps and items on `/tf`.
+The client has an additional parameters to enable publishing of detected load carriers, grasps and items on `/tf` or as markers:
 
 * `publish_tf`: Publish detected instances on tf (default: True)
+* `publish_markers`: Publish detected instances as visualization markers (default: True)
 
 [BoxPick services](https://doc.rc-visard.com/latest/en/itempick.html#services)
 

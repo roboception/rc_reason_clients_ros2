@@ -79,6 +79,23 @@ def item_to_tf(item, postfix):
     return tf
 
 
+def lc_to_marker(lc, lc_no, ns):
+    m = Marker(action=Marker.ADD, type=Marker.CUBE)
+    m.color = ColorRGBA(r=0.0, g=0.2, b=0.8, a=0.3)
+    m.header = lc.pose.header
+    m.ns = ns
+
+    # FIXME: calculate actual bottom and sides
+    # tf2_geometry_msgs is not installed in dashing and eloquent
+    m.id = lc_no
+    m.pose = lc.pose.pose
+    m.scale.x = lc.outer_dimensions.x
+    m.scale.y = lc.outer_dimensions.y
+    m.scale.z = lc.outer_dimensions.z
+
+    return m
+
+
 class PickClient(RestClient):
 
     def __init__(self, rest_name):
@@ -102,6 +119,7 @@ class PickClient(RestClient):
             )
         )
         self.grasp_markers = []
+        self.lc_markers = []
 
         self.pub_tf = self.create_publisher(TFMessage, "/tf", QoSProfile(depth=100))
         self.pub_markers = self.create_publisher(MarkerArray, "visualization_marker_array", QoSProfile(depth=10))
@@ -163,6 +181,8 @@ class PickClient(RestClient):
         if lcs and self.get_parameter('publish_tf').value:
             transforms = [load_carrier_to_tf(lc, i) for i, lc in enumerate(lcs)]
             self.pub_tf.publish(TFMessage(transforms=transforms))
+        if self.get_parameter('publish_markers').value:
+            self.publish_lc_markers(lcs)
 
     def publish_grasps(self, grasps):
         if grasps and self.get_parameter('publish_tf').value:
@@ -170,7 +190,6 @@ class PickClient(RestClient):
             self.pub_tf.publish(TFMessage(transforms=transforms))
         if self.get_parameter('publish_markers').value:
             self.publish_grasps_markers(grasps)
-
 
     def publish_grasps_markers(self, grasps):
         def create_marker(grasp, id):
@@ -198,6 +217,21 @@ class PickClient(RestClient):
             self.grasp_markers[i].action = Marker.DELETE
         self.pub_markers.publish(MarkerArray(markers=self.grasp_markers))
         self.grasp_markers = new_markers
+
+    def publish_lc_markers(self, lcs):
+        new_markers = []
+        for i, lc in enumerate(lcs):
+            m = lc_to_marker(lc, i, f"{self.rest_name}_lcs")
+            if i < len(self.lc_markers):
+                self.lc_markers[i] = m
+            else:
+                self.lc_markers.append(m)
+            new_markers.append(m)
+        for i in range(len(lcs), len(self.lc_markers)):
+            # delete old markers
+            self.lc_markers[i].action = Marker.DELETE
+        self.pub_markers.publish(MarkerArray(markers=self.lc_markers))
+        self.lc_markers = new_markers
 
 
 class ItemPickClient(PickClient):
