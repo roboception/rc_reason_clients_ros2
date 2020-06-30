@@ -28,6 +28,10 @@
 
 import rclpy
 
+from rclpy.qos import QoSProfile
+from tf2_msgs.msg import TFMessage
+from geometry_msgs.msg import TransformStamped
+
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from rc_reason_msgs.srv import SilhouetteMatchDetectObject
 from rc_reason_msgs.srv import CalibrateBasePlane
@@ -40,10 +44,34 @@ from rc_reason_msgs.srv import DeleteRegionsOfInterest2D
 from rc_reason_clients.rest_client import RestClient
 
 
+def instance_to_tf(instance):
+    tf = TransformStamped()
+    tf.header.frame_id = instance.pose_frame
+    tf.child_frame_id = f"{instance.object_id}_{instance.id}"
+    tf.header.stamp = instance.timestamp
+    tf.transform.translation.x = instance.pose.position.x
+    tf.transform.translation.y = instance.pose.position.y
+    tf.transform.translation.z = instance.pose.position.z
+    tf.transform.rotation = instance.pose.orientation
+    return tf
+
+
 class SilhouetteMatchClient(RestClient):
 
     def __init__(self):
         super().__init__('rc_silhouettematch')
+
+        # client only parameters
+        self.declare_parameter(
+            "publish_tf",
+            True,
+            ParameterDescriptor(
+                type=ParameterType.PARAMETER_BOOL,
+                description="Publish detected instances via TF"
+            )
+        )
+
+        self.pub_tf = self.create_publisher(TFMessage, "/tf", QoSProfile(depth=100))
 
         self.srv = self.create_service(SilhouetteMatchDetectObject, self.get_name() + '/detect_object', self.detect_cb)
         self.srv = self.create_service(CalibrateBasePlane, self.get_name() + '/calibrate_base_plane', self.calibrate_cb)
@@ -55,6 +83,7 @@ class SilhouetteMatchClient(RestClient):
 
     def detect_cb(self, request, response):
         self.call_rest_service('detect_object', request, response)
+        self.pub_instances(response.instances)
         return response
 
     def calibrate_cb(self, request, response):
@@ -80,6 +109,14 @@ class SilhouetteMatchClient(RestClient):
     def delete_rois_cb(self, request, response):
         self.call_rest_service('delete_regions_of_interest_2d', request, response)
         return response
+
+    def pub_instances(self, instances):
+        if not instances:
+            return
+        if not self.get_parameter('publish_tf').value:
+            return
+        transforms = [instance_to_tf(i) for i in instances]
+        self.pub_tf.publish(TFMessage(transforms=transforms))
 
 
 def main(args=None):

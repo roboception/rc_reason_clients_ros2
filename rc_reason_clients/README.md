@@ -36,6 +36,11 @@ See the [TagDetect documentation](https://doc.rc-visard.com/latest/en/tagdetect.
 
 [TagDetect parameters](https://doc.rc-visard.com/latest/en/tagdetect.html#parameters)
 
+The clients have an additional parameter to enable publishing of detected tags on `/tf`.
+The child_frame_id is set to `<tagId>_<instanceId>`.
+
+* `publish_tf`: Publish detected tags on tf (default: True)
+
 [TagDetect services](https://doc.rc-visard.com/latest/en/tagdetect.html#services)
 
 For AprilTag detection:
@@ -53,6 +58,11 @@ Client to interface with SilhouetteMatch running on the device.
 See the [SilhouetteMatch documentation](https://doc.rc-visard.com/latest/en/silhouettematch.html) for details.
 
 [SilhouetteMatch parameters](https://doc.rc-visard.com/latest/en/silhouettematch.html#parameters)
+
+The client has an additional parameter to enable publishing of detected instances on `/tf`.
+The child_frame_id is set to `<templateId>_<instanceId>`.
+
+* `publish_tf`: Publish detected instances on tf (default: True)
 
 [SilhouetteMatch Services](https://doc.rc-visard.com/latest/en/silhouettematch.html#services)
 

@@ -28,16 +28,44 @@
 
 import rclpy
 
+from rclpy.qos import QoSProfile
+from tf2_msgs.msg import TFMessage
+from geometry_msgs.msg import TransformStamped
+
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from rc_reason_msgs.srv import DetectTags
 
 from rc_reason_clients.rest_client import RestClient
 
 
+def tag_to_tf(tag):
+    tf = TransformStamped()
+    tf.header.frame_id = tag.header.frame_id
+    tf.child_frame_id = f"{tag.tag.id}_{tag.instance_id}"
+    tf.header.stamp = tag.header.stamp
+    tf.transform.translation.x = tag.pose.pose.position.x
+    tf.transform.translation.y = tag.pose.pose.position.y
+    tf.transform.translation.z = tag.pose.pose.position.z
+    tf.transform.rotation = tag.pose.pose.orientation
+    return tf
+
+
 class TagClient(RestClient):
 
     def __init__(self, rest_name):
         super().__init__(rest_name)
+
+        # client only parameters
+        self.declare_parameter(
+            "publish_tf",
+            True,
+            ParameterDescriptor(
+                type=ParameterType.PARAMETER_BOOL,
+                description="Publish detected tags via TF"
+            )
+        )
+
+        self.pub_tf = self.create_publisher(TFMessage, "/tf", QoSProfile(depth=100))
 
         self.start()
 
@@ -53,7 +81,17 @@ class TagClient(RestClient):
 
     def detect_callback(self, request, response):
         self.call_rest_service('detect', request, response)
+        self.pub_tags(response.tags)
         return response
+
+    def pub_tags(self, tags):
+        if not tags:
+            return
+        if not self.get_parameter('publish_tf').value:
+            return
+        transforms = [tag_to_tf(tag) for tag in tags]
+        self.pub_tf.publish(TFMessage(transforms=transforms))
+
 
 
 def main(args=None, rest_node='rc_april_tag_detect'):
