@@ -107,19 +107,22 @@ class RestClient(Node):
         try:
             args = {}
             if request is not None:
+                # convert ROS request to JSON (with custom API mappings)
                 args = extract_values(request)
-                self.get_logger().debug(f'args: {args}')
+                self.get_logger().debug(f'calling {service} with args: {args}')
 
             url = f'http://{self.host}/api/v1/nodes/{self.rest_name}/services/{service}'
             res = requests_retry_session().put(url, json={'args': args})
 
             j = res.json()
-            self.get_logger().debug(f"rest response: {json.dumps(j, indent=2)}")
-            if response is not None:
-                populate_instance(j['response'], response)
+            self.get_logger().debug(f"{service} rest response: {json.dumps(j, indent=2)}")
             rc = j['response'].get('return_code')
             if rc is not None and rc['value'] < 0:
                 self.get_logger().warn(f"service {service} returned an error: [{rc['value']}] {rc['message']}")
+
+            # convert to ROS response
+            if response is not None:
+                populate_instance(j['response'], response)
         except Exception as e:
             self.get_logger().error(str(e))
             if response is not None and hasattr(response, 'return_code'):
@@ -131,7 +134,7 @@ class RestClient(Node):
             url = f'http://{self.host}/api/v1/nodes/{self.rest_name}/parameters'
             res = requests_retry_session().get(url)
             if res.status_code != 200:
-                self.get_logger().error(f"Unexpected status code: {res.status_code}")
+                self.get_logger().error(f"Getting parameters failed with status code: {res.status_code}")
                 return []
             return res.json()
         except Exception as e:
@@ -143,12 +146,12 @@ class RestClient(Node):
             url = f'http://{self.host}/api/v1/nodes/{self.rest_name}/parameters'
             res = requests_retry_session().put(url, json=parameters)
             j = res.json()
-            self.get_logger().debug(f"rest response: {json.dumps(j, indent=2)}")
+            self.get_logger().debug(f"set parameters response: {json.dumps(j, indent=2)}")
             if 'return_code' in j and j['return_code']['value'] != 0:
                 self.get_logger().warn(f"Setting parameter failed: {j['return_code']['message']}")
                 return False
             if res.status_code != 200:
-                self.get_logger().error(f"Unexpected status code: {res.status_code}")
+                self.get_logger().error(f"Setting parameters failed with status code: {res.status_code}")
                 return False
             return True
         except Exception as e:
