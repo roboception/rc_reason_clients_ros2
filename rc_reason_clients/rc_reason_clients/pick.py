@@ -37,6 +37,8 @@ from rc_reason_msgs.srv import SetLoadCarrier, GetLoadCarriers, DeleteLoadCarrie
 from rc_reason_msgs.srv import SetRegionOfInterest3D, GetRegionsOfInterest3D, DeleteRegionsOfInterest3D
 from rc_reason_msgs.srv import DetectLoadCarriers, DetectFillingLevel
 from rc_reason_msgs.srv import ComputeGrasps, DetectItems
+from visualization_msgs.msg import Marker, MarkerArray
+from std_msgs.msg import ColorRGBA
 
 from rc_reason_clients.rest_client import RestClient
 
@@ -91,8 +93,18 @@ class PickClient(RestClient):
                 description="Publish detected loadcarriers and items via TF"
             )
         )
+        self.declare_parameter(
+            "publish_markers",
+            True,
+            ParameterDescriptor(
+                type=ParameterType.PARAMETER_BOOL,
+                description="Publish detected loadcarriers and grasps as visalization markers"
+            )
+        )
+        self.grasp_markers = []
 
         self.pub_tf = self.create_publisher(TFMessage, "/tf", QoSProfile(depth=100))
+        self.pub_markers = self.create_publisher(MarkerArray, "visualization_marker_array", QoSProfile(depth=10))
 
         self.start()
 
@@ -139,29 +151,53 @@ class PickClient(RestClient):
 
     def detect_lcs_cb(self, request, response):
         self.call_rest_service('detect_load_carriers', request, response)
-        self.pub_lcs(response.load_carriers)
+        self.publish_lcs(response.load_carriers)
         return response
 
     def detect_filling_level_cb(self, request, response):
         self.call_rest_service('detect_filling_level', request, response)
-        self.pub_lcs(response.load_carriers)
+        self.publish_lcs(response.load_carriers)
         return response
 
-    def pub_lcs(self, lcs):
-        if not lcs:
-            return
-        if not self.get_parameter('publish_tf').value:
-            return
-        transforms = [load_carrier_to_tf(lc, i) for i, lc in enumerate(lcs)]
-        self.pub_tf.publish(TFMessage(transforms=transforms))
+    def publish_lcs(self, lcs):
+        if lcs and self.get_parameter('publish_tf').value:
+            transforms = [load_carrier_to_tf(lc, i) for i, lc in enumerate(lcs)]
+            self.pub_tf.publish(TFMessage(transforms=transforms))
 
-    def pub_grasps(self, grasps):
-        if not grasps:
-            return
-        if not self.get_parameter('publish_tf').value:
-            return
-        transforms = [grasp_to_tf(grasp, i) for i, grasp in enumerate(grasps)]
-        self.pub_tf.publish(TFMessage(transforms=transforms))
+    def publish_grasps(self, grasps):
+        if grasps and self.get_parameter('publish_tf').value:
+            transforms = [grasp_to_tf(grasp, i) for i, grasp in enumerate(grasps)]
+            self.pub_tf.publish(TFMessage(transforms=transforms))
+        if self.get_parameter('publish_markers').value:
+            self.publish_grasps_markers(grasps)
+
+
+    def publish_grasps_markers(self, grasps):
+        def create_marker(grasp, id):
+            m = Marker(action=Marker.ADD, type=Marker.SPHERE)
+            m.color = ColorRGBA(r=0.8, g=0.2, b=0.0, a=0.8)
+            m.scale.x = grasp.max_suction_surface_length
+            m.scale.y = grasp.max_suction_surface_width
+            m.scale.z = 0.001
+            m.header = grasp.pose.header
+            m.pose = grasp.pose.pose
+            m.id = i
+            m.ns = f"{self.rest_name}_grasps"
+            return m
+
+        new_markers = []
+        for i, grasp in enumerate(grasps):
+            m = create_marker(grasp, i)
+            if i < len(self.grasp_markers):
+                self.grasp_markers[i] = m
+            else:
+                self.grasp_markers.append(m)
+            new_markers.append(m)
+        for i in range(len(grasps), len(self.grasp_markers)):
+            # delete old markers
+            self.grasp_markers[i].action = Marker.DELETE
+        self.pub_markers.publish(MarkerArray(markers=self.grasp_markers))
+        self.grasp_markers = new_markers
 
 
 class ItemPickClient(PickClient):
@@ -172,8 +208,8 @@ class ItemPickClient(PickClient):
 
     def compute_grasps_cb(self, request, response):
         self.call_rest_service('compute_grasps', request, response)
-        self.pub_lcs(response.load_carriers)
-        self.pub_grasps(response.grasps)
+        self.publish_lcs(response.load_carriers)
+        self.publish_grasps(response.grasps)
         return response
 
 
@@ -186,18 +222,18 @@ class BoxPickClient(PickClient):
 
     def compute_grasps_cb(self, request, response):
         self.call_rest_service('compute_grasps', request, response)
-        self.pub_lcs(response.load_carriers)
-        self.pub_grasps(response.grasps)
-        self.pub_items(response.items)
+        self.publish_lcs(response.load_carriers)
+        self.publish_grasps(response.grasps)
+        self.publish_items(response.items)
         return response
 
     def detect_items_cb(self, request, response):
         self.call_rest_service('detect_items', request, response)
-        self.pub_lcs(response.load_carriers)
-        self.pub_items(response.items)
+        self.publish_lcs(response.load_carriers)
+        self.publish_items(response.items)
         return response
 
-    def pub_items(self, items):
+    def publish_items(self, items):
         if not items:
             return
         if not self.get_parameter('publish_tf').value:
