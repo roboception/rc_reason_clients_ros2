@@ -152,7 +152,20 @@ def test_plane():
     assert_plane(ros_plane, plane)
 
 
-def test_get_base_plane_calibration_response():
+def test_get_base_plane_calibration():
+    ros_req = GetBasePlaneCalibration.Request()
+
+    # in silhouettematch, the robot_pose can also be used in camera frame!
+    ros_req.pose_frame = "camera"
+    api_req = extract_values(ros_req)
+    assert ros_req.pose_frame == api_req["pose_frame"]
+    assert_pose(ros_req.robot_pose, api_req["robot_pose"])
+
+    ros_req.pose_frame = "external"
+    api_req = extract_values(ros_req)
+    assert ros_req.pose_frame == api_req["pose_frame"]
+    assert_pose(ros_req.robot_pose, api_req["robot_pose"])
+
     response = {
         "plane": {
             "distance": -0.7552042203510121,
@@ -163,7 +176,7 @@ def test_get_base_plane_calibration_response():
             },
             "pose_frame": "camera",
         },
-        "return_code": {"message": "", "value": 0},
+        "return_code": {"message": "foo", "value": 1234},
     }
     ros_res = GetBasePlaneCalibration.Response()
     populate_instance(response, ros_res)
@@ -217,6 +230,13 @@ def test_calibrate_base_plane_request(method):
         assert ros_req.plane.coef[1] == api_req["plane"]["normal"]["y"]
         assert ros_req.plane.coef[2] == api_req["plane"]["normal"]["z"]
         assert ros_req.plane.coef[3] == api_req["plane"]["distance"]
+    # in silhouettematch, the robot_pose can also be used in camera frame!
+    assert_pose(ros_req.robot_pose, api_req["robot_pose"])
+
+    ros_req.pose_frame = "external"
+    api_req = extract_values(ros_req)
+    assert ros_req.pose_frame == api_req["pose_frame"]
+    assert_pose(ros_req.robot_pose, api_req["robot_pose"])
 
 
 def test_get_lcs():
