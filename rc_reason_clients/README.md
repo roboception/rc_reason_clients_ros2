@@ -60,10 +60,11 @@ See the [SilhouetteMatch documentation](https://doc.rc-visard.com/latest/en/silh
 
 [SilhouetteMatch parameters](https://doc.rc-visard.com/latest/en/silhouettematch.html#parameters)
 
-The client has an additional parameter to enable publishing of detected instances on `/tf`.
+The client has a additional parameters to enable publishing of detected instances on `/tf` or the base plane as marker.
 The child_frame_id is set to `<templateId>_<instanceId>`.
 
 * `publish_tf`: Publish detected instances on tf (default: True)
+* `publish_markers`: Publish base plane as visualization marker (default: True)
 
 [SilhouetteMatch Services](https://doc.rc-visard.com/latest/en/silhouettematch.html#services)
 

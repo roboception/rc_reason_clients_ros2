@@ -28,9 +28,10 @@
 
 import rclpy
 
+from math import sqrt
 from rclpy.qos import QoSProfile
 from tf2_msgs.msg import TFMessage
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import TransformStamped, Quaternion
 
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from rc_reason_msgs.srv import SilhouetteMatchDetectObject
@@ -40,6 +41,8 @@ from rc_reason_msgs.srv import DeleteBasePlaneCalibration
 from rc_reason_msgs.srv import GetRegionsOfInterest2D
 from rc_reason_msgs.srv import SetRegionOfInterest2D
 from rc_reason_msgs.srv import DeleteRegionsOfInterest2D
+from visualization_msgs.msg import Marker, MarkerArray
+from std_msgs.msg import ColorRGBA
 
 from rc_reason_clients.rest_client import RestClient
 
@@ -70,8 +73,17 @@ class SilhouetteMatchClient(RestClient):
                 description="Publish detected instances via TF"
             )
         )
+        self.declare_parameter(
+            "publish_markers",
+            True,
+            ParameterDescriptor(
+                type=ParameterType.PARAMETER_BOOL,
+                description="Publish base plane as visalization marker"
+            )
+        )
 
         self.pub_tf = self.create_publisher(TFMessage, "/tf", QoSProfile(depth=100))
+        self.pub_markers = self.create_publisher(MarkerArray, "visualization_marker_array", QoSProfile(depth=10))
 
         self.srv = self.create_service(SilhouetteMatchDetectObject, self.get_name() + '/detect_object', self.detect_cb)
         self.srv = self.create_service(CalibrateBasePlane, self.get_name() + '/calibrate_base_plane', self.calibrate_cb)
@@ -88,10 +100,14 @@ class SilhouetteMatchClient(RestClient):
 
     def calibrate_cb(self, request, response):
         self.call_rest_service('calibrate_base_plane', request, response)
+        if response.return_code.value >= 0:
+            self.publish_base_plane_markers(response.plane, response.pose_frame)
         return response
 
     def get_calib_cb(self, request, response):
         self.call_rest_service('get_base_plane_calibration', request, response)
+        if response.return_code.value >= 0:
+            self.publish_base_plane_markers(response.plane, response.pose_frame)
         return response
 
     def delete_calib_cb(self, request, response):
@@ -117,6 +133,34 @@ class SilhouetteMatchClient(RestClient):
             return
         transforms = [instance_to_tf(i) for i in instances]
         self.pub_tf.publish(TFMessage(transforms=transforms))
+
+    def publish_base_plane_markers(self, plane, pose_frame):
+        def create_marker(plane, id=0):
+            m = Marker(action=Marker.ADD, type=Marker.CYLINDER)
+            m.color = ColorRGBA(r=0.0, g=1.0, b=0.0, a=0.5)
+            m.header.frame_id = pose_frame
+            m.pose.position.x = -plane.coef[0] * plane.coef[3]
+            m.pose.position.y = -plane.coef[1] * plane.coef[3]
+            m.pose.position.z = -plane.coef[2] * plane.coef[3]
+            # quaternion yielding double the desired rotation (if normal is normalized):
+            # q.w = dot(zaxis, normal), q.xyz = cross(zaxis, normal)
+            # add quaternion with zero rotation (xyz=0, w=1) to get half the rotation from above
+            # and normalize again
+            q = Quaternion(x=-plane.coef[1], y=plane.coef[0], z=0.0, w=plane.coef[2] + 1.0)
+            norm = sqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w)
+            m.pose.orientation.x = q.x / norm
+            m.pose.orientation.y = q.y / norm
+            m.pose.orientation.w = q.z / norm
+            m.pose.orientation.x = q.z / norm
+            m.scale.x = 1.0
+            m.scale.y = 1.0
+            m.scale.z = 0.001
+            m.id = id
+            m.ns = f"{self.rest_name}_base_plane"
+            return m
+
+        m = create_marker(plane)
+        self.pub_markers.publish(MarkerArray(markers=[m]))
 
 
 def main(args=None):
