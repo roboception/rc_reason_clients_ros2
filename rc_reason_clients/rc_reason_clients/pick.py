@@ -130,7 +130,7 @@ class PickClient(RestClient):
         self.add_rest_service(GetLoadCarriers, 'get_load_carriers', self.get_lcs_cb)
         self.add_rest_service(DeleteLoadCarriers, 'delete_load_carriers', self.delete_lcs_cb)
         self.add_rest_service(SetRegionOfInterest3D, 'set_region_of_interest', self.set_roi_cb)
-        self.add_rest_service(GetRegionsOfInterest3D, 'get_regions_of_interst', self.get_rois_cb)
+        self.add_rest_service(GetRegionsOfInterest3D, 'get_regions_of_interest', self.get_rois_cb)
         self.add_rest_service(DeleteRegionsOfInterest3D, 'delete_regions_of_interest', self.delete_rois_cb)
         self.add_rest_service(DetectLoadCarriers, 'detect_load_carriers', self.detect_lcs_cb)
         self.add_rest_service(DetectFillingLevel, 'detect_filling_level', self.detect_filling_level_cb)
