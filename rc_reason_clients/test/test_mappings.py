@@ -82,8 +82,9 @@ def assert_primitives(ros, api):
             assert api[field_name] == getattr(ros, field_name)
 
 
-def assert_lc(ros_lc, api_lc, timestamp=None):
-    assert_pose(ros_lc.pose.pose, api_lc["pose"])
+def assert_lc(ros_lc, api_lc, timestamp=None, pose_required=True):
+    if pose_required:
+        assert_pose(ros_lc.pose.pose, api_lc["pose"])
     assert ros_lc.pose.header.frame_id == api_lc["pose_frame"]
     if timestamp is not None:
         assert_timestamp(ros_lc.pose.header.stamp, timestamp)
@@ -304,9 +305,16 @@ def test_set_lc():
     ros_req.load_carrier.inner_dimensions = Box(x=0.8, y=0.2, z=0.8)
     ros_req.load_carrier.outer_dimensions = Box(x=1.0, y=0.6, z=1.0)
     api_req = extract_values(ros_req)
-    assert_lc(ros_req.load_carrier, api_req["load_carrier"])
+    assert_lc(ros_req.load_carrier, api_req["load_carrier"], pose_required=False)
     # don't send overfilled flag in set_load_carrier
     assert "overfilled" not in api_req["load_carrier"]
+    # don't send pose (as prior) if frame_id is not set
+    assert "pose" not in api_req["load_carrier"]
+
+    # with prior
+    ros_req.load_carrier.pose.header.frame_id = 'camera'
+    api_req = extract_values(ros_req)
+    assert_pose(ros_req.load_carrier.pose.pose, api_req["load_carrier"]["pose"])
 
 
 def test_detect_lcs():

@@ -99,6 +99,12 @@ def map_ros2api(msg, rostype):
             new_msg['type'] = 'SPHERE'
             new_msg['sphere'] = {'radius': d[0]}
         return new_msg
+    elif rostype in ['rc_reason_msgs/SetLoadCarrier_Request']:
+        new_msg = copy.deepcopy(msg)
+        # don't send pose (as prior) if frame_id is not set
+        if not msg['load_carrier']['pose_frame']:
+            del new_msg['load_carrier']['pose']
+        return new_msg
 
     # no mapping required, return auto-generated one
     return msg
