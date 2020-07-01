@@ -130,7 +130,7 @@ class PickClient(RestClient):
         return response
 
     def get_rois_cb(self, request, response):
-        self.call_rest_service('get_regions_of_interst', request, response)
+        self.call_rest_service('get_regions_of_interest', request, response)
         return response
 
     def delete_rois_cb(self, request, response):
