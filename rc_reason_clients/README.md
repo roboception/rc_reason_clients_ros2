@@ -3,7 +3,7 @@ rc_reason_clients for ROS2
 
 This package provides ROS2 client nodes that interface with Roboception devices like the [rc_visard](https://roboception.com/rc_visard) 3D sensor.
 
-Please consult the manual for detailed descriptions of parameters and services: https://doc.rc-visard.com).
+Please consult the manual for detailed descriptions of parameters and services: https://doc.rc-visard.com.
 
 These rc_reason client nodes communicate with the device via REST-API and make the functionality available in a ROS2 native way:
 
@@ -36,10 +36,11 @@ See the [TagDetect documentation](https://doc.rc-visard.com/latest/en/tagdetect.
 
 [TagDetect parameters](https://doc.rc-visard.com/latest/en/tagdetect.html#parameters)
 
-The clients have an additional parameter to enable publishing of detected tags on `/tf`.
+The clients have additional parameters to enable publishing of detected tags on `/tf` or as markers.
 The child_frame_id is set to `<tagId>_<instanceId>`.
 
 * `publish_tf`: Publish detected tags on tf (default: True)
+* `publish_markers`: Publish detected tags as visualization markers (default: True)
 
 [TagDetect services](https://doc.rc-visard.com/latest/en/tagdetect.html#services)
 
@@ -59,10 +60,11 @@ See the [SilhouetteMatch documentation](https://doc.rc-visard.com/latest/en/silh
 
 [SilhouetteMatch parameters](https://doc.rc-visard.com/latest/en/silhouettematch.html#parameters)
 
-The client has an additional parameter to enable publishing of detected instances on `/tf`.
+The client has a additional parameters to enable publishing of detected instances on `/tf` or the base plane as marker.
 The child_frame_id is set to `<templateId>_<instanceId>`.
 
 * `publish_tf`: Publish detected instances on tf (default: True)
+* `publish_markers`: Publish base plane as visualization marker (default: True)
 
 [SilhouetteMatch Services](https://doc.rc-visard.com/latest/en/silhouettematch.html#services)
 
@@ -77,9 +79,10 @@ See the [ItemPick documentation](https://doc.rc-visard.com/latest/en/itempick.ht
 
 [ItemPick parameters](https://doc.rc-visard.com/latest/en/itempick.html#parameters)
 
-The client has an additional parameter to enable publishing of detected load carriers and grasps on `/tf`.
+The client has an additional parameters to enable publishing of detected load carriers and grasps on `/tf` or as markers:
 
 * `publish_tf`: Publish detected instances on tf (default: True)
+* `publish_markers`: Publish detected instances as visualization markers (default: True)
 
 [ItemPick services](https://doc.rc-visard.com/latest/en/itempick.html#services)
 
@@ -94,9 +97,10 @@ See the [BoxPick documentation](https://doc.rc-visard.com/latest/en/itempick.htm
 
 [BoxPick parameters](https://doc.rc-visard.com/latest/en/itempick.html#parameters)
 
-The client has an additional parameter to enable publishing of detected load carriers, grasps and items on `/tf`.
+The client has an additional parameters to enable publishing of detected load carriers, grasps and items on `/tf` or as markers:
 
 * `publish_tf`: Publish detected instances on tf (default: True)
+* `publish_markers`: Publish detected instances as visualization markers (default: True)
 
 [BoxPick services](https://doc.rc-visard.com/latest/en/itempick.html#services)
 
