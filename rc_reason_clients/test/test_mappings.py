@@ -41,6 +41,7 @@ from rc_reason_msgs.srv import (
     GetLoadCarriers,
     DetectLoadCarriers,
     DetectFillingLevel,
+    DetectTags,
 )
 from rc_reason_msgs.srv import SetRegionOfInterest3D, GetRegionsOfInterest3D
 from rc_reason_msgs.srv import ComputeGrasps, DetectItems
@@ -108,41 +109,70 @@ def assert_grasp(ros_grasp, api_grasp):
 
 def assert_item(ros_item, api_item):
     assert_pose(ros_item.pose.pose, api_item["pose"])
-    assert_header(
-        ros_item.pose.header, api_item["timestamp"], api_item["pose_frame"]
-    )
+    assert_header(ros_item.pose.header, api_item["timestamp"], api_item["pose_frame"])
 
 
-def test_detectedtag():
-    tag = {
-        "id": "36h10_2319",
-        "instance_id": "2367151514",
-        "pose": {
-            "orientation": {
-                "w": 0.661847902940126,
-                "x": -0.14557814643855335,
-                "y": -0.14578886497641433,
-                "z": -0.7207703958280759,
-            },
-            "position": {
-                "x": 0.0419080633254838,
-                "y": -0.02554360431324062,
-                "z": 0.4794844275109502,
-            },
-        },
-        "pose_frame": "camera",
-        "size": 0.026511077553573122,
+def test_detect_tags():
+    ros_req = DetectTags.Request()
+
+    # robot_pose should only be provided if pose_frame is external
+    ros_req.pose_frame = "camera"
+    api_req = extract_values(ros_req)
+    assert ros_req.pose_frame == api_req["pose_frame"]
+    assert "robot_pose" not in api_req
+
+    ros_req.pose_frame = "external"
+    ros_req.robot_pose.orientation.x = 1.0
+    ros_req.robot_pose.orientation.y = 0.0
+    ros_req.robot_pose.orientation.z = 0.0
+    ros_req.robot_pose.orientation.w = 0.0
+    ros_req.robot_pose.position.x = 1.1
+    ros_req.robot_pose.position.y = -1.1
+    ros_req.robot_pose.position.z = 0.5
+    api_req = extract_values(ros_req)
+    assert ros_req.pose_frame == api_req["pose_frame"]
+    assert_pose(ros_req.robot_pose, api_req["robot_pose"])
+
+    api_res = {
+        "tags": [
+            {
+                "id": "36h10_2319",
+                "instance_id": "2367151514",
+                "pose": {
+                    "orientation": {
+                        "w": 0.661847902940126,
+                        "x": -0.14557814643855335,
+                        "y": -0.14578886497641433,
+                        "z": -0.7207703958280759,
+                    },
+                    "position": {
+                        "x": 0.0419080633254838,
+                        "y": -0.02554360431324062,
+                        "z": 0.4794844275109502,
+                    },
+                },
+                "pose_frame": "camera",
+                "size": 0.026511077553573122,
+                "timestamp": {"nsec": 764237750, "sec": 1591101453},
+            }
+        ],
         "timestamp": {"nsec": 764237750, "sec": 1591101453},
+        "return_code": {"message": "foo", "value": 1234},
     }
 
-    ros_tag = DetectedTag()
-    populate_instance(tag, ros_tag)
-    assert ros_tag.tag.id == tag["id"]
-    assert ros_tag.tag.size == tag["size"]
-    assert ros_tag.instance_id == tag["instance_id"]
-    assert_header(ros_tag.header, tag["timestamp"], tag["pose_frame"])
-    assert_pose(ros_tag.pose.pose, tag["pose"])
-    assert ros_tag.pose.header == ros_tag.header
+    ros_res = DetectTags.Response()
+    populate_instance(api_res, ros_res)
+    for i, ros_tag in enumerate(ros_res.tags):
+        tag = api_res["tags"][i]
+        assert ros_tag.tag.id == tag["id"]
+        assert ros_tag.tag.size == tag["size"]
+        assert ros_tag.instance_id == tag["instance_id"]
+        assert_header(ros_tag.header, tag["timestamp"], tag["pose_frame"])
+        assert_pose(ros_tag.pose.pose, tag["pose"])
+        assert ros_tag.pose.header == ros_tag.header
+    assert ros_res.return_code.value == api_res["return_code"]["value"]
+    assert ros_res.return_code.message == api_res["return_code"]["message"]
+    assert_timestamp(ros_res.timestamp, api_res["timestamp"])
 
 
 def test_plane():
@@ -654,7 +684,7 @@ def test_compute_grasps():
     populate_instance(api_res, ros_res)
     ros_lc = ros_res.load_carriers[0]
     api_lc = api_res["load_carriers"][0]
-    assert_lc(ros_lc, api_lc, api_res['timestamp'])
+    assert_lc(ros_lc, api_lc, api_res["timestamp"])
     for i, ros_grasp in enumerate(ros_res.grasps):
         api_grasp = api_res["grasps"][i]
         assert_grasp(ros_grasp, api_grasp)
@@ -780,7 +810,7 @@ def test_detect_items():
     populate_instance(api_res, ros_res)
     ros_lc = ros_res.load_carriers[0]
     api_lc = api_res["load_carriers"][0]
-    assert_lc(ros_lc, api_lc, api_res['timestamp'])
+    assert_lc(ros_lc, api_lc, api_res["timestamp"])
     assert ros_lc.overfilled == api_lc["overfilled"]
     for i, ros_item in enumerate(ros_res.items):
         api_item = api_res["items"][i]

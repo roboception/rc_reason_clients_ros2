@@ -50,7 +50,7 @@ def map_ros2api(msg, rostype):
         new_msg['pose'] = msg['pose']['pose']
         new_msg['pose_frame'] = msg['pose']['header']['frame_id']
         return new_msg
-    elif rostype in ['rc_reason_msgs/DetectLoadCarriers_Request', 'rc_reason_msgs/DetectFillingLevel_Request']:
+    elif rostype in ['rc_reason_msgs/DetectLoadCarriers_Request', 'rc_reason_msgs/DetectFillingLevel_Request', 'rc_reason_msgs/DetectTags_Request']:
         new_msg = copy.deepcopy(msg)
         # don't send robot pose if not external
         if msg['pose_frame'] != 'external':
