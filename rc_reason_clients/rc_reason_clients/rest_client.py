@@ -26,6 +26,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from functools import partial
 from rclpy.node import Node
 
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType, SetParametersResult, IntegerRange, FloatingPointRange
@@ -87,6 +88,8 @@ class RestClient(Node):
 
         self.declare_rest_parameters()
         self.set_parameters_callback(self.params_callback)
+
+        self.rest_services = []
 
     def declare_rest_parameters(self):
         rest_params = self.get_rest_parameters()
@@ -157,3 +160,8 @@ class RestClient(Node):
         except Exception as e:
             self.get_logger().error(str(e))
             return False
+
+    def add_rest_service(self, srv_type, srv_name, callback):
+        """create a service and inject the REST-API service name"""
+        srv = self.create_service(srv_type, f"{self.get_name()}/{srv_name}", partial(callback, srv_name))
+        self.rest_services.append(srv)

@@ -82,61 +82,61 @@ class HandEyeCalibClient(RestClient):
             )
         self.pub_tf = self.create_publisher(TFMessage, "/tf_static", qos)
 
-        self.srv = self.create_service(HandEyeCalibration, self.get_name() + '/calibrate', self.calibrate_cb)
-        self.srv = self.create_service(HandEyeCalibration, self.get_name() + '/get_calibration', self.get_calib_cb)
-        self.srv = self.create_service(SetHandEyeCalibration, self.get_name() + '/set_calibration', self.set_calib_cb)
-        self.srv = self.create_service(HandEyeCalibrationTrigger, self.get_name() + '/save_calibration', self.save_calib_cb)
-        self.srv = self.create_service(HandEyeCalibrationTrigger, self.get_name() + '/delete_calibration', self.delete_calib_cb)
-        self.srv = self.create_service(HandEyeCalibrationTrigger, self.get_name() + '/reset_calibration', self.reset_calib_cb)
-        self.srv = self.create_service(SetHandEyeCalibrationPose, self.get_name() + '/set_pose', self.set_pose_cb)
+        self.add_rest_service(HandEyeCalibration, 'calibrate', self.calibrate_cb)
+        self.add_rest_service(HandEyeCalibration, 'get_calibration', self.get_calib_cb)
+        self.add_rest_service(SetHandEyeCalibration, 'set_calibration', self.set_calib_cb)
+        self.add_rest_service(HandEyeCalibrationTrigger, 'save_calibration', self.save_calib_cb)
+        self.add_rest_service(HandEyeCalibrationTrigger, 'delete_calibration', self.delete_calib_cb)
+        self.add_rest_service(HandEyeCalibrationTrigger, 'reset_calibration', self.reset_calib_cb)
+        self.add_rest_service(SetHandEyeCalibrationPose, 'set_pose', self.set_pose_cb)
 
         # get initial calibration from sensor
-        self.get_calib_cb(HandEyeCalibration.Request(), HandEyeCalibration.Response())
+        self.get_calib_cb('get_calibration', HandEyeCalibration.Request(), HandEyeCalibration.Response())
 
-    def calibrate_cb(self, request, response):
-        self.call_rest_service('calibrate', request, response)
+    def calibrate_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         if response.success:
             self.pub_hand_eye(response.pose, response.robot_mounted)
         else:
             self.get_logger().warn(response.message)
         return response
 
-    def get_calib_cb(self, request, response):
-        self.call_rest_service('get_calibration', request, response)
+    def get_calib_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         if response.success:
             self.pub_hand_eye(response.pose, response.robot_mounted)
         else:
             self.get_logger().warn(response.message)
         return response
 
-    def set_calib_cb(self, request, response):
-        self.call_rest_service('set_calibration', request, response)
+    def set_calib_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         if response.success:
             self.pub_hand_eye(request.pose, request.robot_mounted)
         else:
             self.get_logger().warn(response.message)
         return response
 
-    def save_calib_cb(self, request, response):
-        self.call_rest_service('save_calibration', request, response)
+    def save_calib_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         if not response.success:
             self.get_logger().warn(response.message)
         return response
 
-    def delete_calib_cb(self, request, response):
-        self.call_rest_service('delete_calibration', request, response)
+    def delete_calib_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         if not response.success:
             self.get_logger().warn(response.message)
         return response
 
-    def reset_calib_cb(self, request, response):
-        self.call_rest_service('reset_calibration', request, response)
+    def reset_calib_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         if not response.success:
             self.get_logger().warn(response.message)
         return response
 
-    def set_pose_cb(self, request, response):
-        self.call_rest_service('set_pose', request, response)
+    def set_pose_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         if not response.success:
             self.get_logger().warn(response.message)
         return response

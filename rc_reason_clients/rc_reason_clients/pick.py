@@ -96,14 +96,14 @@ class PickClient(RestClient):
 
         self.start()
 
-        self.srv = self.create_service(SetLoadCarrier, self.get_name() + '/set_load_carrier', self.set_lc_cb)
-        self.srv = self.create_service(GetLoadCarriers, self.get_name() + '/get_load_carriers', self.get_lcs_cb)
-        self.srv = self.create_service(DeleteLoadCarriers, self.get_name() + '/delete_load_carriers', self.delete_lcs_cb)
-        self.srv = self.create_service(SetRegionOfInterest3D, self.get_name() + '/set_region_of_interest', self.set_roi_cb)
-        self.srv = self.create_service(GetRegionsOfInterest3D, self.get_name() + '/get_regions_of_interst', self.get_rois_cb)
-        self.srv = self.create_service(DeleteRegionsOfInterest3D, self.get_name() + '/delete_regions_of_interest', self.delete_rois_cb)
-        self.srv = self.create_service(DetectLoadCarriers, self.get_name() + '/detect_load_carriers', self.detect_lcs_cb)
-        self.srv = self.create_service(DetectFillingLevel, self.get_name() + '/detect_filling_level', self.detect_filling_level_cb)
+        self.add_rest_service(SetLoadCarrier, 'set_load_carrier', self.set_lc_cb)
+        self.add_rest_service(GetLoadCarriers, 'get_load_carriers', self.get_lcs_cb)
+        self.add_rest_service(DeleteLoadCarriers, 'delete_load_carriers', self.delete_lcs_cb)
+        self.add_rest_service(SetRegionOfInterest3D, 'set_region_of_interest', self.set_roi_cb)
+        self.add_rest_service(GetRegionsOfInterest3D, 'get_regions_of_interst', self.get_rois_cb)
+        self.add_rest_service(DeleteRegionsOfInterest3D, 'delete_regions_of_interest', self.delete_rois_cb)
+        self.add_rest_service(DetectLoadCarriers, 'detect_load_carriers', self.detect_lcs_cb)
+        self.add_rest_service(DetectFillingLevel, 'detect_filling_level', self.detect_filling_level_cb)
 
     def start(self):
         self.get_logger().info(f"starting {self.rest_name}")
@@ -113,37 +113,37 @@ class PickClient(RestClient):
         self.get_logger().info(f"stopping {self.rest_name}")
         self.call_rest_service('stop')
 
-    def set_lc_cb(self, request, response):
-        self.call_rest_service('set_load_carrier', request, response)
+    def set_lc_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         return response
 
-    def get_lcs_cb(self, request, response):
-        self.call_rest_service('get_load_carriers', request, response)
+    def get_lcs_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         return response
 
-    def delete_lcs_cb(self, request, response):
-        self.call_rest_service('delete_load_carriers', request, response)
+    def delete_lcs_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         return response
 
-    def set_roi_cb(self, request, response):
-        self.call_rest_service('set_region_of_interest', request, response)
+    def set_roi_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         return response
 
-    def get_rois_cb(self, request, response):
-        self.call_rest_service('get_regions_of_interest', request, response)
+    def get_rois_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         return response
 
-    def delete_rois_cb(self, request, response):
-        self.call_rest_service('delete_regions_of_interest', request, response)
+    def delete_rois_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         return response
 
-    def detect_lcs_cb(self, request, response):
-        self.call_rest_service('detect_load_carriers', request, response)
+    def detect_lcs_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         self.pub_lcs(response.load_carriers)
         return response
 
-    def detect_filling_level_cb(self, request, response):
-        self.call_rest_service('detect_filling_level', request, response)
+    def detect_filling_level_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         self.pub_lcs(response.load_carriers)
         return response
 
@@ -168,10 +168,10 @@ class ItemPickClient(PickClient):
 
     def __init__(self, rest_name):
         super().__init__(rest_name)
-        self.srv = self.create_service(ComputeGrasps, self.get_name() + '/compute_grasps', self.compute_grasps_cb)
+        self.add_rest_service(ComputeGrasps, 'compute_grasps', self.compute_grasps_cb)
 
-    def compute_grasps_cb(self, request, response):
-        self.call_rest_service('compute_grasps', request, response)
+    def compute_grasps_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         self.pub_lcs(response.load_carriers)
         self.pub_grasps(response.grasps)
         return response
@@ -181,18 +181,18 @@ class BoxPickClient(PickClient):
 
     def __init__(self, rest_name):
         super().__init__(rest_name)
-        self.srv = self.create_service(ComputeGrasps, self.get_name() + '/compute_grasps', self.compute_grasps_cb)
-        self.srv = self.create_service(DetectItems, self.get_name() + '/detect_items', self.detect_items_cb)
+        self.add_rest_service(ComputeGrasps, 'compute_grasps', self.compute_grasps_cb)
+        self.add_rest_service(DetectItems, 'detect_items', self.detect_items_cb)
 
-    def compute_grasps_cb(self, request, response):
-        self.call_rest_service('compute_grasps', request, response)
+    def compute_grasps_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         self.pub_lcs(response.load_carriers)
         self.pub_grasps(response.grasps)
         self.pub_items(response.items)
         return response
 
-    def detect_items_cb(self, request, response):
-        self.call_rest_service('detect_items', request, response)
+    def detect_items_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         self.pub_lcs(response.load_carriers)
         self.pub_items(response.items)
         return response

@@ -69,7 +69,7 @@ class TagClient(RestClient):
 
         self.start()
 
-        self.srv = self.create_service(DetectTags, self.get_name() + '/detect', self.detect_callback)
+        self.add_rest_service(DetectTags, 'detect', self.detect_callback)
 
     def start(self):
         self.get_logger().info(f"starting {self.rest_name}")
@@ -79,8 +79,8 @@ class TagClient(RestClient):
         self.get_logger().info(f"stopping {self.rest_name}")
         self.call_rest_service('stop')
 
-    def detect_callback(self, request, response):
-        self.call_rest_service('detect', request, response)
+    def detect_callback(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
         self.pub_tags(response.tags)
         return response
 
