@@ -86,6 +86,7 @@ class RestClient(Node):
         self.declare_parameter('host', '', ParameterDescriptor(type=ParameterType.PARAMETER_STRING, read_only=True))
         self.host = self.get_parameter('host').value
 
+        self.rest_param_names = None
         self.declare_rest_parameters()
         self.set_parameters_callback(self.params_callback)
 
@@ -95,7 +96,7 @@ class RestClient(Node):
         rest_params = self.get_rest_parameters()
         self.rest_param_names = [p['name'] for p in rest_params]
         def to_ros_param(p):
-            return (p['name'], p['value'], parameter_descriptor_from_rest(p))
+            return p['name'], p['value'], parameter_descriptor_from_rest(p)
         parameters = [to_ros_param(p) for p in rest_params]
         self.declare_parameters('', parameters)
 

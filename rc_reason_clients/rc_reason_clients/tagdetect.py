@@ -116,7 +116,7 @@ class TagClient(RestClient):
             m.scale.x = tag.tag.size
             m.scale.y = tag.tag.size
             m.scale.z = 0.001
-            m.id = i
+            m.id = id
             m.ns = f"{self.rest_name}_tags"
             return m
 
