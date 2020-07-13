@@ -87,7 +87,7 @@ The client has an additional parameters to enable publishing of detected load ca
 [ItemPick services](https://doc.rc-visard.com/latest/en/itempick.html#services)
 
 To run the client:
-`ros2 run rc_reason_clients rc_silhouettematch_client --ros-args --param host:=10.0.2.40`
+`ros2 run rc_reason_clients rc_itempick_client --ros-args --param host:=10.0.2.40`
 
 rc_boxpick_client
 -----------------
@@ -105,7 +105,7 @@ The client has an additional parameters to enable publishing of detected load ca
 [BoxPick services](https://doc.rc-visard.com/latest/en/itempick.html#services)
 
 To run the client:
-`ros2 run rc_reason_clients rc_silhouettematch_client --ros-args --param host:=10.0.2.40`
+`ros2 run rc_reason_clients rc_boxpick_client --ros-args --param host:=10.0.2.40`
 
 rc_hand_eye_calibration_client
 ------------------------------
