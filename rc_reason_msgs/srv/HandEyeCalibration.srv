@@ -15,5 +15,9 @@ string message
 geometry_msgs/Pose pose
 # Calibration residual error
 float64 error
+# Expected translation error given in meter
+float64 translation_error_meter
+# Expected rotation error in degrees
+float64 rotation_error_degree
 # True if calibration was done with sensor mounted on robot
 bool robot_mounted
