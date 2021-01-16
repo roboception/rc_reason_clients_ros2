@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>rc_reason_msgs</name>
-  <version>0.2.0</version>
+  <version>0.2.1</version>
   <description>Msg and srv definitions for rc_reason_clients</description>
   <maintainer email="felix.ruess@roboception.de">Felix Ruess</maintainer>
   <license>BSD</license>

@@ -1,3 +1,8 @@
+0.2.1 (2021-01-16)
+------------------
+
+* cmake: detect if it is shallow clone on buildfarm and use version from package.xml
+
 0.2.0 (2021-01-14)
 ------------------
 
