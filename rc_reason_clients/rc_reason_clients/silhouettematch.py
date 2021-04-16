@@ -50,7 +50,8 @@ from rc_reason_clients.transform_helpers import lc_to_marker, load_carrier_to_tf
 class SilhouetteMatchClient(RestClient):
 
     def __init__(self):
-        super().__init__('rc_silhouettematch')
+        ignored_parameters = ['load_carrier_crop_distance', 'load_carrier_model_tolerance']
+        super().__init__('rc_silhouettematch', ignored_parameters)
 
         # client only parameters
         self.declare_parameter(

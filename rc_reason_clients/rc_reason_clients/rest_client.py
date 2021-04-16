@@ -80,9 +80,11 @@ def parameter_descriptor_from_rest(p):
 
 class RestClient(Node):
 
-    def __init__(self, rest_name):
+    def __init__(self, rest_name, ignored_parameters=[]):
         super().__init__(rest_name + '_client')
         self.rest_name = rest_name
+        self.ignored_parameters = ignored_parameters
+
         self.declare_parameter('host', '', ParameterDescriptor(type=ParameterType.PARAMETER_STRING, read_only=True))
         self.host = self.get_parameter('host').value
 
@@ -93,7 +95,7 @@ class RestClient(Node):
         self.rest_services = []
 
     def declare_rest_parameters(self):
-        rest_params = self.get_rest_parameters()
+        rest_params = [p for p in self._get_rest_parameters() if p['name'] not in self.ignored_parameters]
         self.rest_param_names = [p['name'] for p in rest_params]
         def to_ros_param(p):
             return p['name'], p['value'], parameter_descriptor_from_rest(p)
@@ -103,7 +105,7 @@ class RestClient(Node):
     def params_callback(self, parameters):
         new_rest_params = [{'name': p.name, 'value': p.value} for p in parameters if p.name in self.rest_param_names]
         if new_rest_params:
-            success = self.set_rest_parameters(new_rest_params)
+            success = self._set_rest_parameters(new_rest_params)
             return SetParametersResult(successful=success)
         return SetParametersResult(successful=True)
 
@@ -133,7 +135,7 @@ class RestClient(Node):
                 response.return_code.value = -1000
                 response.return_code.message = str(e)
 
-    def get_rest_parameters(self):
+    def _get_rest_parameters(self):
         try:
             url = f'http://{self.host}/api/v1/nodes/{self.rest_name}/parameters'
             res = requests_retry_session().get(url)
@@ -145,7 +147,7 @@ class RestClient(Node):
             self.get_logger().error(str(e))
             return []
 
-    def set_rest_parameters(self, parameters):
+    def _set_rest_parameters(self, parameters):
         try:
             url = f'http://{self.host}/api/v1/nodes/{self.rest_name}/parameters'
             res = requests_retry_session().put(url, json=parameters)
