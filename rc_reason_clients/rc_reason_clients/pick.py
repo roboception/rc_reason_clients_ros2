@@ -33,26 +33,13 @@ from tf2_msgs.msg import TFMessage
 from geometry_msgs.msg import TransformStamped
 
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
-from rc_reason_msgs.srv import SetLoadCarrier, GetLoadCarriers, DeleteLoadCarriers
-from rc_reason_msgs.srv import SetRegionOfInterest3D, GetRegionsOfInterest3D, DeleteRegionsOfInterest3D
-from rc_reason_msgs.srv import DetectLoadCarriers, DetectFillingLevel
 from rc_reason_msgs.srv import ComputeGrasps, DetectItems
+
 from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
 
 from rc_reason_clients.rest_client import RestClient
-
-
-def load_carrier_to_tf(lc, postfix):
-    tf = TransformStamped()
-    tf.header.frame_id = lc.pose.header.frame_id
-    tf.child_frame_id = f"lc_{postfix}"
-    tf.header.stamp = lc.pose.header.stamp
-    tf.transform.translation.x = lc.pose.pose.position.x
-    tf.transform.translation.y = lc.pose.pose.position.y
-    tf.transform.translation.z = lc.pose.pose.position.z
-    tf.transform.rotation = lc.pose.pose.orientation
-    return tf
+from rc_reason_clients.transform_helpers import lc_to_marker, load_carrier_to_tf
 
 
 def grasp_to_tf(grasp, postfix):
@@ -77,23 +64,6 @@ def item_to_tf(item, postfix):
     tf.transform.translation.z = item.pose.pose.position.z
     tf.transform.rotation = item.pose.pose.orientation
     return tf
-
-
-def lc_to_marker(lc, lc_no, ns):
-    m = Marker(action=Marker.ADD, type=Marker.CUBE)
-    m.color = ColorRGBA(r=0.0, g=0.2, b=0.8, a=0.3)
-    m.header = lc.pose.header
-    m.ns = ns
-
-    # FIXME: calculate actual bottom and sides
-    # tf2_geometry_msgs is not installed in dashing and eloquent
-    m.id = lc_no
-    m.pose = lc.pose.pose
-    m.scale.x = lc.outer_dimensions.x
-    m.scale.y = lc.outer_dimensions.y
-    m.scale.z = lc.outer_dimensions.z
-
-    return m
 
 
 class PickClient(RestClient):
@@ -126,15 +96,6 @@ class PickClient(RestClient):
 
         self.start()
 
-        self.add_rest_service(SetLoadCarrier, 'set_load_carrier', self.set_lc_cb)
-        self.add_rest_service(GetLoadCarriers, 'get_load_carriers', self.get_lcs_cb)
-        self.add_rest_service(DeleteLoadCarriers, 'delete_load_carriers', self.delete_lcs_cb)
-        self.add_rest_service(SetRegionOfInterest3D, 'set_region_of_interest', self.set_roi_cb)
-        self.add_rest_service(GetRegionsOfInterest3D, 'get_regions_of_interest', self.get_rois_cb)
-        self.add_rest_service(DeleteRegionsOfInterest3D, 'delete_regions_of_interest', self.delete_rois_cb)
-        self.add_rest_service(DetectLoadCarriers, 'detect_load_carriers', self.detect_lcs_cb)
-        self.add_rest_service(DetectFillingLevel, 'detect_filling_level', self.detect_filling_level_cb)
-
     def start(self):
         self.get_logger().info(f"starting {self.rest_name}")
         self.call_rest_service('start')
@@ -142,40 +103,6 @@ class PickClient(RestClient):
     def stop(self):
         self.get_logger().info(f"stopping {self.rest_name}")
         self.call_rest_service('stop')
-
-    def set_lc_cb(self, srv_name, request, response):
-        self.call_rest_service(srv_name, request, response)
-        return response
-
-    def get_lcs_cb(self, srv_name, request, response):
-        self.call_rest_service(srv_name, request, response)
-        return response
-
-    def delete_lcs_cb(self, srv_name, request, response):
-        self.call_rest_service(srv_name, request, response)
-        return response
-
-    def set_roi_cb(self, srv_name, request, response):
-        self.call_rest_service(srv_name, request, response)
-        return response
-
-    def get_rois_cb(self, srv_name, request, response):
-        self.call_rest_service(srv_name, request, response)
-        return response
-
-    def delete_rois_cb(self, srv_name, request, response):
-        self.call_rest_service(srv_name, request, response)
-        return response
-
-    def detect_lcs_cb(self, srv_name, request, response):
-        self.call_rest_service(srv_name, request, response)
-        self.publish_lcs(response.load_carriers)
-        return response
-
-    def detect_filling_level_cb(self, srv_name, request, response):
-        self.call_rest_service(srv_name, request, response)
-        self.publish_lcs(response.load_carriers)
-        return response
 
     def publish_lcs(self, lcs):
         if lcs and self.get_parameter('publish_tf').value:

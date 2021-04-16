@@ -6,6 +6,9 @@ string pose_frame
 # Optional
 string region_of_interest_id
 
+# Optional
+string region_of_interest_2d_id
+
 # Required
 string[] load_carrier_ids
 

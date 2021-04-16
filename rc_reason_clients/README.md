@@ -1,9 +1,11 @@
 rc_reason_clients for ROS2
 ==========================
 
-This package provides ROS2 client nodes that interface with Roboception devices like the [rc_visard](https://roboception.com/rc_visard) 3D sensor.
+This package provides ROS2 client nodes that interface with Roboception devices like the [rc_visard](https://roboception.com/rc_visard) 3D sensor and [rc_cube](https://roboception.com/rc_cube).
 
-Please consult the manual for detailed descriptions of parameters and services: https://doc.rc-visard.com.
+Please consult the manuals for detailed descriptions of parameters and services:
+* https://doc.rc-visard.com
+* https://doc.rc-cube.com
 
 These rc_reason client nodes communicate with the device via REST-API and make the functionality available in a ROS2 native way:
 
@@ -127,3 +129,43 @@ The client has the additional parameters for publishing via TF2:
 
 To run the client:
 `ros2 run rc_reason_clients rc_hand_eye_calibration_client --ros-args --param host:=10.0.2.40`
+
+rc_load_carrier_client
+----------------------
+
+Client to interface with LoadCarrier detection and RegionOfInterest configuration running on the device.
+
+See the [LoadCarrier documentation](https://doc.rc-visard.com/latest/en/loadcarrier.html) for details.
+
+[LoadCarrier parameters](https://doc.rc-visard.com/latest/en/loadcarrier.html#parameters)
+
+The client has an additional parameters to enable publishing of detected load carriers on `/tf` or as markers:
+
+* `publish_tf`: Publish detected load carriers on tf (default: True)
+* `publish_markers`: Publish detected load_carriers as visualization markers (default: True)
+
+[LoadCarrier services](https://doc.rc-visard.com/latest/en/loadcarrier.html#services)
+
+To run the client:
+`ros2 run rc_reason_clients rc_load_carrier_client --ros-args --param host:=10.0.2.40`
+
+rc_cadmatch_client
+------------------
+
+CADMatch is only available for the rc_cube.
+
+Client to interface with CADMatch on the rc_cube.
+
+See the [CADMatch documentation](https://doc.rc-cube.com/latest/en/cadmatch.html) for details.
+
+[CADMatch parameters](https://doc.rc-cube.com/latest/en/cadmatch.html#parameters)
+
+The client has an additional parameters to enable publishing of detected load carriers on `/tf` or as markers:
+
+* `publish_tf`: Publish detected load carriers on tf (default: True)
+* `publish_markers`: Publish detected load_carriers as visualization markers (default: True)
+
+[CADMatch services](https://doc.rc-cube.com/latest/en/cadmatch.html#services)
+
+To run the client:
+`ros2 run rc_reason_clients rc_cadmatch_client --ros-args --param host:=10.0.2.40`

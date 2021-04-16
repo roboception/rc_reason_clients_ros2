@@ -12,13 +12,21 @@ string pose_frame
 # Required only if reference frame = external and sensor is robot-mounted
 geometry_msgs/Pose robot_pose
 
+# Optional
+string load_carrier_id
+
+# Optional. Enables collision checking of grasps with load carrier
+CollisionDetection collision_detection
+
 ---
 
 builtin_interfaces/Time timestamp
 
-string object_id
+# List of detected matches (instances) of the object
+Match[] matches
 
-# List of detected instances of the object
-SilhouetteMatchInstance[] instances
+Grasp[] grasps
+
+LoadCarrier[] load_carriers
 
 rc_common_msgs/ReturnCode return_code

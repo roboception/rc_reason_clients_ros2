@@ -25,7 +25,8 @@ setup(
             'rc_silhouettematch_client = rc_reason_clients.silhouettematch:main',
             'rc_itempick_client = rc_reason_clients.pick:rc_itempick_client',
             'rc_boxpick_client = rc_reason_clients.pick:rc_boxpick_client',
-            'rc_hand_eye_calibration_client = rc_reason_clients.hand_eye_calib:main'
+            'rc_hand_eye_calibration_client = rc_reason_clients.hand_eye_calib:main',
+            'rc_cadmatch_client = rc_reason_clients.cadmatch.main'
         ],
     },
 )

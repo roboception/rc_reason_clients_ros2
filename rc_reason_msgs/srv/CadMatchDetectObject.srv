@@ -1,4 +1,7 @@
-# Description: Triggers the detection of the given load carriers.
+# Description: Triggers detection of an object.
+
+# Required
+string template_id
 
 # Required. Pose frame for output poses (valid values are camera and external)
 string pose_frame
@@ -7,17 +10,25 @@ string pose_frame
 string region_of_interest_id
 
 # Optional
-string region_of_interest_2d_id
+string load_carrier_id
 
-# Required
-string[] load_carrier_ids
+# Optional
+Compartment load_carrier_compartment
 
 # Required only if reference frame = external and sensor is robot-mounted
 geometry_msgs/Pose robot_pose
 
+# Optional. Enables collision checking of grasps with load carrier
+CollisionDetection collision_detection
+
 ---
 
 builtin_interfaces/Time timestamp
+
+# List of detected matches (instances) of the object
+Match[] matches
+
+Grasp[] grasps
 
 LoadCarrier[] load_carriers
 

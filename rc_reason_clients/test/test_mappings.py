@@ -45,6 +45,7 @@ from rc_reason_msgs.srv import (
 )
 from rc_reason_msgs.srv import SetRegionOfInterest3D, GetRegionsOfInterest3D
 from rc_reason_msgs.srv import ComputeGrasps, DetectItems
+from rc_reason_msgs.srv import SilhouetteMatchDetectObject
 
 
 def assert_timestamp(ros_ts, ts):
@@ -96,7 +97,7 @@ def assert_lc(ros_lc, api_lc, timestamp=None, pose_required=True):
         assert ros_lc.overfilled == api_lc["overfilled"]
 
 
-def assert_grasp(ros_grasp, api_grasp):
+def assert_suction_grasp(ros_grasp, api_grasp):
     assert_pose(ros_grasp.pose.pose, api_grasp["pose"])
     assert_header(
         ros_grasp.pose.header, api_grasp["timestamp"], api_grasp["pose_frame"]
@@ -108,9 +109,30 @@ def assert_grasp(ros_grasp, api_grasp):
     assert ros_grasp.max_suction_surface_width == api_grasp["max_suction_surface_width"]
 
 
+def assert_grasp(ros_grasp, api_grasp):
+    assert_pose(ros_grasp.pose.pose, api_grasp["pose"])
+    assert_header(
+        ros_grasp.pose.header, api_grasp["timestamp"], api_grasp["pose_frame"]
+    )
+    assert ros_grasp.id == api_grasp["id"]
+    assert ros_grasp.uuid == api_grasp["uuid"]
+    assert ros_grasp.match_uuid == api_grasp.get("match_uuid") or api_grasp.get("instance_uuid")
+
+
 def assert_item(ros_item, api_item):
     assert_pose(ros_item.pose.pose, api_item["pose"])
     assert_header(ros_item.pose.header, api_item["timestamp"], api_item["pose_frame"])
+
+
+def assert_match(ros_match, api_match):
+    assert_pose(ros_match.pose.pose, api_match["pose"])
+    assert_header(ros_match.pose.header, api_match["timestamp"], api_match["pose_frame"])
+    assert ros_match.uuid == api_match["uuid"]
+    assert ros_match.template_id == api_match.get("template_id") or api_match.get("object_id")
+    if 'score' in api_match:
+        assert ros_match.score == api_match['score']
+    else:
+        assert ros_match.score == -1.0
 
 
 def test_detect_tags():
@@ -695,7 +717,7 @@ def test_compute_grasps():
     assert_lc(ros_lc, api_lc, api_res["timestamp"])
     for i, ros_grasp in enumerate(ros_res.grasps):
         api_grasp = api_res["grasps"][i]
-        assert_grasp(ros_grasp, api_grasp)
+        assert_suction_grasp(ros_grasp, api_grasp)
 
 
 def test_detect_items():
@@ -823,3 +845,169 @@ def test_detect_items():
     for i, ros_item in enumerate(ros_res.items):
         api_item = api_res["items"][i]
         assert_item(ros_item, api_item)
+
+
+def test_silhouettematch_detect_object():
+    ros_req = SilhouetteMatchDetectObject.Request()
+    ros_req.pose_frame = "camera"
+    ros_req.object_to_detect.object_id = "foo_template"
+    ros_req.object_to_detect.region_of_interest_2d_id = "bar_roi"
+    ros_req.offset = 0.1
+
+    api_req = extract_values(ros_req)
+    assert ros_req.pose_frame == api_req["pose_frame"]
+    assert ros_req.object_to_detect.object_id == api_req["object_to_detect"]["object_id"]
+    assert ros_req.object_to_detect.region_of_interest_2d_id == api_req["object_to_detect"]["region_of_interest_2d_id"]
+    assert ros_req.offset == api_req["offset"]
+
+    # don't send robot_pose if pose_frame is camera
+    assert "robot_pose" not in api_req
+
+    ros_req.pose_frame = "external"
+    ros_req.robot_pose.position.y = 1.0
+    ros_req.robot_pose.orientation.z = 1.0
+    api_req = extract_values(ros_req)
+    assert "robot_pose" in api_req
+    assert_pose(ros_req.robot_pose, api_req["robot_pose"])
+
+    api_res = {
+        "timestamp": {"sec": 1587035449, "nsec": 321465164},
+        "return_code": {"message": "abcdef", "value": 1234},
+        "load_carriers": [
+            {
+                "pose": {
+                    "position": {
+                        "y": -0.0168824336375496,
+                        "x": 0.1189406043995812,
+                        "z": 0.8875302697155399,
+                    },
+                    "orientation": {
+                        "y": -0.04632486703729271,
+                        "x": 0.998664879978751,
+                        "z": 0.006342615882086765,
+                        "w": 0.02195985184108778,
+                    },
+                },
+                "pose_frame": "camera",
+                "inner_dimensions": {"y": 0.27, "x": 0.37, "z": 0.14},
+                "outer_dimensions": {"y": 0.3, "x": 0.4, "z": 0.2},
+                "overfilled": True,
+                "rim_thickness": {"y": 0.0, "x": 0.0},
+                "id": "xyz",
+            }
+        ],
+        "object_id": "foo_template",
+        "grasps": [
+            {
+                "instance_uuid": "666ab9d5-613d-4ab5-8150-e0f57bc64f0b",
+                "uuid": "8566591f-a973-48dc-868d-d88dd36b1c2f",
+                "pose_frame": "camera",
+                "timestamp": {
+                    "sec": 1618242033,
+                    "nsec": 580367964
+                },
+                "pose": {
+                "position": {
+                    "y": -0.10296900579068122,
+                    "x": -0.0266098059453003,
+                    "z": 0.7429549952451179
+                },
+                "orientation": {
+                    "y": -0.03440297300901497,
+                    "x": -0.0521801300739437,
+                    "z": -0.5059767984782052,
+                    "w": 0.86027969223698
+                }
+                },
+                "id": "grasp1"
+            },
+            {
+                "instance_uuid": "666ab9d5-613d-4ab5-8150-e0f57bc64f0b",
+                "uuid": "032d85c9-897f-45bc-b6c0-962c72d77ff5",
+                "pose_frame": "camera",
+                "timestamp": {
+                    "sec": 1618242033,
+                    "nsec": 580367964
+                },
+                "pose": {
+                "position": {
+                    "y": -0.12056604440014489,
+                    "x": -0.017118856731590644,
+                    "z": 0.74522584119423
+                },
+                "orientation": {
+                    "y": 0.0521801300739437,
+                    "x": -0.03440297300901496,
+                    "z": 0.8602796922369801,
+                    "w": 0.5059767984782052
+                }
+                },
+                "id": "grasp1"
+            }
+        ],
+        "instances": [
+            {
+                "uuid": "666ab9d5-613d-4ab5-8150-e0f57bc64f0b",
+                "pose_frame": "camera",
+                "timestamp": {
+                    "sec": 1605085203,
+                    "nsec": 437828567
+                },
+                "pose": {
+                "position": {
+                    "y": -0.030490136926486944,
+                    "x": 0.11629137366368486,
+                    "z": 0.750721261686269
+                },
+                "orientation": {
+                    "y": 0.00888023218635928,
+                    "x": 0.01306525525093437,
+                    "z": 0.2290564806473834,
+                    "w": 0.973284937341054
+                }
+                },
+                "object_id": "foo_template",
+                "grasp_uuids": [
+                    "8566591f-a973-48dc-868d-d88dd36b1c2f",
+                    "032d85c9-897f-45bc-b6c0-962c72d77ff5"
+                ],
+                "id": "666ab9d5-613d-4ab5-8150-e0f57bc64f0b"
+            },
+            {
+                "uuid": "1b9a8b0d-1add-4c2b-81e7-240a21ec65c5",
+                "pose_frame": "camera",
+                "timestamp": {
+                    "sec": 1605085203,
+                    "nsec": 437828567
+                },
+                "pose": {
+                "position": {
+                    "y": 0.10677343069137911,
+                    "x": 0.021505663098054306,
+                    "z": 0.7558621572235659
+                },
+                "orientation": {
+                    "y": 0.010262094705195637,
+                    "x": 0.012010363471490575,
+                    "z": 0.12072303580908399,
+                    "w": 0.9925605216844882
+                }
+                },
+                "object_id": "foo_template",
+                "grasp_uuids": [],
+                "id": "1b9a8b0d-1add-4c2b-81e7-240a21ec65c5"
+            }
+        ]
+    }
+    ros_res = SilhouetteMatchDetectObject.Response()
+    populate_instance(api_res, ros_res)
+    ros_lc = ros_res.load_carriers[0]
+    api_lc = api_res["load_carriers"][0]
+    assert_lc(ros_lc, api_lc, api_res["timestamp"])
+    assert ros_lc.overfilled == api_lc["overfilled"]
+    for i, ros_match in enumerate(ros_res.matches):
+        api_match = api_res["instances"][i]
+        assert_match(ros_match, api_match)
+    for i, ros_grasp in enumerate(ros_res.grasps):
+        api_grasp = api_res["grasps"][i]
+        assert_grasp(ros_grasp, api_grasp)

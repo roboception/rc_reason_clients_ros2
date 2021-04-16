@@ -31,11 +31,13 @@ set(msg_files
   "msg/CollisionDetection.msg"
   "msg/Compartment.msg"
   "msg/DetectedTag.msg"
+  "msg/Grasp.msg"
   "msg/GridSize.msg"
   "msg/Item.msg"
   "msg/ItemModel.msg"
   "msg/LoadCarrier.msg"
   "msg/LoadCarrierWithFillingLevel.msg"
+  "msg/Match.msg"
   "msg/RangeBox.msg"
   "msg/RangeRectangle.msg"
   "msg/RangeValue.msg"
@@ -49,6 +51,7 @@ set(msg_files
 )
 
 set(srv_files
+  "srv/CadMatchDetectObject.srv"
   "srv/CalibrateBasePlane.srv"
   "srv/ComputeGrasps.srv"
   "srv/DeleteBasePlaneCalibration.srv"

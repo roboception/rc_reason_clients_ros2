@@ -1,4 +1,4 @@
-# Copyright 2020 Roboception GmbH
+# Copyright 2021 Roboception GmbH
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -28,29 +28,28 @@
 
 import rclpy
 
-from math import sqrt
 from rclpy.qos import QoSProfile
 from tf2_msgs.msg import TFMessage
-from geometry_msgs.msg import TransformStamped, Quaternion
+from geometry_msgs.msg import TransformStamped
 
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 
-from rc_reason_msgs.srv import SilhouetteMatchDetectObject
-from rc_reason_msgs.srv import CalibrateBasePlane
-from rc_reason_msgs.srv import GetBasePlaneCalibration
-from rc_reason_msgs.srv import DeleteBasePlaneCalibration
+from rc_reason_msgs.srv import SetLoadCarrier, GetLoadCarriers, DeleteLoadCarriers
+from rc_reason_msgs.srv import DetectLoadCarriers, DetectFillingLevel
+from rc_reason_msgs.srv import GetRegionsOfInterest3D, SetRegionOfInterest3D, DeleteRegionsOfInterest3D
+from rc_reason_msgs.srv import GetRegionsOfInterest2D, SetRegionOfInterest2D, DeleteRegionsOfInterest2D
 
 from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
 
 from rc_reason_clients.rest_client import RestClient
-from rc_reason_clients.transform_helpers import lc_to_marker, load_carrier_to_tf, match_to_tf
+from rc_reason_clients.transform_helpers import lc_to_marker, load_carrier_to_tf
 
 
-class SilhouetteMatchClient(RestClient):
+class LoadCarrierClient(RestClient):
 
     def __init__(self):
-        super().__init__('rc_silhouettematch')
+        super().__init__('rc_load_carrier')
 
         # client only parameters
         self.declare_parameter(
@@ -58,7 +57,7 @@ class SilhouetteMatchClient(RestClient):
             True,
             ParameterDescriptor(
                 type=ParameterType.PARAMETER_BOOL,
-                description="Publish detected instances via TF"
+                description="Publish detected loadcarriers and items via TF"
             )
         )
         self.declare_parameter(
@@ -66,7 +65,7 @@ class SilhouetteMatchClient(RestClient):
             True,
             ParameterDescriptor(
                 type=ParameterType.PARAMETER_BOOL,
-                description="Publish base plane as visalization marker"
+                description="Publish detected loadcarriers and grasps as visalization markers"
             )
         )
 
@@ -75,46 +74,38 @@ class SilhouetteMatchClient(RestClient):
 
         self.lc_markers = []
 
-        self.add_rest_service(SilhouetteMatchDetectObject, 'detect_object', self.detect_cb)
-        self.add_rest_service(CalibrateBasePlane, 'calibrate_base_plane', self.calib_cb)
-        self.add_rest_service(GetBasePlaneCalibration, 'get_base_plane_calibration', self.calib_cb)
-        self.add_rest_service(DeleteBasePlaneCalibration, 'delete_base_plane_calibration', self.generic_cb)
+        self.add_rest_service(DetectLoadCarriers, 'detect_load_carriers', self.lc_cb)
+        self.add_rest_service(DetectFillingLevel, 'detect_filling_level', self.lc_cb)
+        self.add_rest_service(SetLoadCarrier, 'set_load_carrier', self.generic_cb)
+        self.add_rest_service(GetLoadCarriers, 'get_load_carriers', self.generic_cb)
+        self.add_rest_service(DeleteLoadCarriers, 'delete_load_carriers', self.generic_cb)
+        self.add_rest_service(SetRegionOfInterest3D, 'set_region_of_interest', self.generic_cb)
+        self.add_rest_service(GetRegionsOfInterest3D, 'get_regions_of_interest', self.generic_cb)
+        self.add_rest_service(DeleteRegionsOfInterest3D, 'delete_regions_of_interest', self.generic_cb)
+        self.add_rest_service(GetRegionsOfInterest2D, 'get_regions_of_interest_2d', self.generic_cb)
+        self.add_rest_service(SetRegionOfInterest2D, 'set_region_of_interest_2d', self.generic_cb)
+        self.add_rest_service(DeleteRegionsOfInterest2D, 'delete_regions_of_interest_2d', self.generic_cb)
 
     def generic_cb(self, srv_name, request, response):
         self.call_rest_service(srv_name, request, response)
         return response
 
-    def detect_cb(self, srv_name, request, response):
+    def lc_cb(self, srv_name, request, response):
         self.call_rest_service(srv_name, request, response)
-        self.pub_matches(response.matches)
         self.publish_lcs(response.load_carriers)
         return response
 
-    def calib_cb(self, srv_name, request, response):
-        self.call_rest_service(srv_name, request, response)
-        if response.return_code.value >= 0:
-            self.publish_base_plane_markers(response.plane, response.pose_frame)
-        return response
-
-    def pub_matches(self, matches):
-        if not matches:
-            return
-        if not self.get_parameter('publish_tf').value:
-            return
-        transforms = [match_to_tf(i) for i in matches]
-        self.pub_tf.publish(TFMessage(transforms=transforms))
-
     def publish_lcs(self, lcs):
-        if lcs and self.publish_tf:
+        if lcs and self.get_parameter('publish_tf').value:
             transforms = [load_carrier_to_tf(lc, i) for i, lc in enumerate(lcs)]
             self.pub_tf.publish(TFMessage(transforms=transforms))
-        if self.publish_markers:
+        if self.get_parameter('publish_markers').value:
             self.publish_lc_markers(lcs)
 
     def publish_lc_markers(self, lcs):
         new_markers = []
         for i, lc in enumerate(lcs):
-            m = lc_to_marker(lc, i, self.rest_name + "_lcs")
+            m = lc_to_marker(lc, i, f"{self.rest_name}_lcs")
             if i < len(self.lc_markers):
                 self.lc_markers[i] = m
             else:
@@ -126,39 +117,11 @@ class SilhouetteMatchClient(RestClient):
         self.pub_markers.publish(MarkerArray(markers=self.lc_markers))
         self.lc_markers = new_markers
 
-    def publish_base_plane_markers(self, plane, pose_frame):
-        def create_marker(plane, id=0):
-            m = Marker(action=Marker.ADD, type=Marker.CYLINDER)
-            m.color = ColorRGBA(r=0.0, g=1.0, b=0.0, a=0.5)
-            m.header.frame_id = pose_frame
-            m.pose.position.x = -plane.coef[0] * plane.coef[3]
-            m.pose.position.y = -plane.coef[1] * plane.coef[3]
-            m.pose.position.z = -plane.coef[2] * plane.coef[3]
-            # quaternion yielding double the desired rotation (if normal is normalized):
-            # q.w = dot(zaxis, normal), q.xyz = cross(zaxis, normal)
-            # add quaternion with zero rotation (xyz=0, w=1) to get half the rotation from above
-            # and normalize again
-            q = Quaternion(x=-plane.coef[1], y=plane.coef[0], z=0.0, w=plane.coef[2] + 1.0)
-            norm = sqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w)
-            m.pose.orientation.x = q.x / norm
-            m.pose.orientation.y = q.y / norm
-            m.pose.orientation.w = q.z / norm
-            m.pose.orientation.x = q.z / norm
-            m.scale.x = 1.0
-            m.scale.y = 1.0
-            m.scale.z = 0.001
-            m.id = id
-            m.ns = self.rest_name + "_base_plane"
-            return m
-
-        m = create_marker(plane)
-        self.pub_markers.publish(MarkerArray(markers=[m]))
-
 
 def main(args=None):
     rclpy.init(args=args)
 
-    client = SilhouetteMatchClient()
+    client = LoadCarrierClient()
 
     host = client.get_parameter('host').value
     if not host:
