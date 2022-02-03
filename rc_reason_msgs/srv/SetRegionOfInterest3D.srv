@@ -1,10 +1,7 @@
-# Description: Sets a region of interest and/or updates its visualization.
+# Description: Sets a 3D region of interest.
 
 # Required
 RegionOfInterest3D region_of_interest
-
-# Required only if reference frame = external and sensor is robot-mounted
-geometry_msgs/Pose robot_pose
 
 ---
 

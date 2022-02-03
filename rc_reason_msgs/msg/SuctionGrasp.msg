@@ -1,4 +1,4 @@
-# Definition of a suction grasp for the itempick component
+# Definition of a suction grasp for the ItemPick component
 
 string uuid
 

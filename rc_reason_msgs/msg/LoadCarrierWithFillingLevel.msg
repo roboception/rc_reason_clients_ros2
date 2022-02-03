@@ -2,6 +2,9 @@
 
 string id
 
+# Optional. The load carrier rim model. The only supported value is STANDARD
+string type
+
 # Required
 Box outer_dimensions
 
@@ -10,6 +13,12 @@ Box inner_dimensions
 
 # Optional. If not provided, the rim thickness is computed from the outer and inner dimensions
 Rectangle rim_thickness
+
+# Optional. Height of the rim step for rims with an L-profile.
+float64 rim_step_height
+
+# Optional. Length of the rim ledge in x and y direction. This requires rim_thickness to be set.
+Rectangle rim_ledge
 
 geometry_msgs/PoseStamped pose
 

@@ -5,6 +5,6 @@ string[] load_carrier_ids
 
 ---
 
-LoadCarrier[] load_carriers
+LoadCarrierModel[] load_carriers
 
 rc_common_msgs/ReturnCode return_code

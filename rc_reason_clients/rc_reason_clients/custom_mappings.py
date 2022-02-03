@@ -40,9 +40,8 @@ def map_ros2api(msg, rostype):
             new_msg['stereo'] = {'plane_preference': msg['stereo_plane_preference']}
             del new_msg['stereo_plane_preference']
         return new_msg
-    elif rostype == 'rc_reason_msgs/LoadCarrier':
-        # never send overfilled flag
-        new_msg = {k: v for k, v in msg.items() if k not in ['pose', 'overfilled']}
+    elif rostype == 'rc_reason_msgs/LoadCarrierModel':
+        new_msg = copy.deepcopy(msg)
         # map PoseStamped to pose and pose_frame
         new_msg['pose'] = msg['pose']['pose']
         new_msg['pose_frame'] = msg['pose']['header']['frame_id']
@@ -95,7 +94,7 @@ def map_ros2api(msg, rostype):
         return new_msg
     elif rostype in ['rc_reason_msgs/SetLoadCarrier_Request']:
         new_msg = copy.deepcopy(msg)
-        # don't send pose (as prior) if frame_id is not set
+        # don't send pose (as prior) if pose_frame is not set
         if not msg['load_carrier']['pose_frame']:
             del new_msg['load_carrier']['pose']
         return new_msg
@@ -136,7 +135,9 @@ def map_api2ros(msg, rostype):
         new_msg['pose_frame'] = msg['plane']['pose_frame']
         del new_msg['plane']['pose_frame']
         return new_msg
-    elif rostype in ['rc_reason_msgs/LoadCarrier']:
+    elif rostype in ['rc_reason_msgs/LoadCarrier',
+                     'rc_reason_msgs/LoadCarrierModel'
+                     ]:
         return _to_ros_pose_stamped(msg)
     elif rostype in ['rc_reason_msgs/ComputeGrasps_Response',
                      'rc_reason_msgs/DetectFillingLevel_Response',

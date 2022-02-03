@@ -1,4 +1,4 @@
-# This represents a detected load carrier by its geometry and its pose
+# This represents a load carrier by its geometry and its pose
 
 string id
 
@@ -20,7 +20,14 @@ float64 rim_step_height
 # Optional. Length of the rim ledge in x and y direction. This requires rim_thickness to be set.
 Rectangle rim_ledge
 
+# When setting a load carrier, this is the prior if frame_id is not empty (should be 'camera' or 'external')
 geometry_msgs/PoseStamped pose
 
-# True if a detected load carrier is overfilled. Ignored on setting load carrier.
-bool overfilled
+# Optional. Indicates how to interpret the load carrier pose
+# If not set and pose is zero, it's equivalent to NO_POSE
+# If not set and any value in pose is not zero, it's equivalent to ORIENTATION_PRIOR
+# Valid values are:
+# NO_POSE
+# EXACT_POSE
+# ORIENTATION_PRIOR
+string pose_type

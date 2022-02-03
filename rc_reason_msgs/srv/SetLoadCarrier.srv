@@ -1,7 +1,7 @@
 # Description: Persistently sets a load carrier.
 
 # Required
-LoadCarrier load_carrier
+LoadCarrierModel load_carrier
 
 ---
 
