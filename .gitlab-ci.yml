@@ -30,12 +30,6 @@ stages:
     - amd64
     - docker
 
-.armhf_foxy_t: &armhf_foxy_job
-  image: ros:foxy-ros-base-focal
-  tags:
-    - armhf
-    - docker
-
 .amd64_galactic_t: &amd64_galactic_job
   image: ros:galactic-ros-base-focal
   tags:
@@ -117,20 +111,12 @@ msgs:foxy:amd64:
   <<: *amd64_foxy_job
   extends: .build_msgs_testing
 
-msgs:foxy:armhf:
-  <<: *armhf_foxy_job
-  extends: .build_msgs_testing
-
 msgs:galactic:amd64:
   <<: *amd64_galactic_job
   extends: .build_msgs_testing
 
 msgs_stable:foxy:amd64:
   <<: *amd64_foxy_job
-  extends: .build_msgs
-
-msgs_stable:foxy:armhf:
-  <<: *armhf_foxy_job
   extends: .build_msgs
 
 msgs_stable:galactic:amd64:
@@ -142,12 +128,6 @@ test:foxy:amd64:
   extends: .test_clients
   dependencies:
     - msgs:foxy:amd64
-
-test:foxy:armhf:
-  <<: *armhf_foxy_job
-  extends: .test_clients
-  dependencies:
-    - msgs:foxy:armhf
 
 test:galactic:amd64:
   <<: *amd64_galactic_job
@@ -161,12 +141,10 @@ upload_testing:focal:
   extends: .upload_deb_testing
   dependencies:
     - msgs:foxy:amd64
-    - msgs:foxy:armhf
     - msgs:galactic:amd64
 
 upload_stable:focal:
   extends: .upload_deb_stable
   dependencies:
     - msgs_stable:foxy:amd64
-    - msgs_stable:foxy:armhf
     - msgs_stable:galactic:amd64
