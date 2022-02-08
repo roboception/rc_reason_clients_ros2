@@ -26,7 +26,8 @@ setup(
             'rc_itempick_client = rc_reason_clients.pick:rc_itempick_client',
             'rc_boxpick_client = rc_reason_clients.pick:rc_boxpick_client',
             'rc_hand_eye_calibration_client = rc_reason_clients.hand_eye_calib:main',
-            'rc_cadmatch_client = rc_reason_clients.cadmatch.main'
+            'rc_cadmatch_client = rc_reason_clients.cadmatch:main',
+            'rc_load_carrier_client = rc_reason_clients.load_carrier:main'
         ],
     },
 )

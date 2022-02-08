@@ -24,7 +24,7 @@ The parameters and services of each client have the same names as in the REST-AP
 
 Additionally every client has a `host` parameter which needs to be set to the IP address or hostname of the device (e.g. rc_visard).
 
-Example for eloquent:
+Example:
 
 ```
 ros2 run rc_reason_clients rc_april_tag_detect_client --ros-args --param host:=10.0.2.40
