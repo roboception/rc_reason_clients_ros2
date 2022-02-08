@@ -1,3 +1,10 @@
+0.3.0 (2022-02-08)
+------------------
+
+* add rc_cadmatch_client and rc_load_carrier_client
+* use refactored and updated rc_reason_msgs
+* replace deprecated set_parameters_callback with add_on_set_parameters_callback
+
 0.2.1 (2021-01-16)
 ------------------
 
