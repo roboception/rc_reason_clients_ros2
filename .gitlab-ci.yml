@@ -25,19 +25,19 @@ stages:
 # Templates using anchors
 #########################
 .amd64_foxy_t: &amd64_foxy_job
-  image: ros:foxy-ros-base-bionic
+  image: ros:foxy-ros-base-focal
   tags:
     - amd64
     - docker
 
 .armhf_foxy_t: &armhf_foxy_job
-  image: ros:foxy-ros-base-bionic
+  image: ros:foxy-ros-base-focal
   tags:
     - armhf
     - docker
 
 .amd64_galactic_t: &amd64_galactic_job
-  image: ros:galactic-ros-base-bionic
+  image: ros:galactic-ros-base-focal
   tags:
     - amd64
     - docker
@@ -79,7 +79,7 @@ stages:
 
 .upload_deb:
   stage: upload
-  image: registry.roboception.de/tools/docker_images:bionic-buildimage
+  image: registry.roboception.de/tools/docker_images:focal-buildimage
   before_script:
      - export DISTRO_CODENAME=`lsb_release -cs` && echo Using distro $DISTRO_CODENAME
   script:
@@ -157,14 +157,14 @@ test:galactic:amd64:
 
 # upload packages for master and tags
 #####################################
-upload_testing:bionic:
+upload_testing:focal:
   extends: .upload_deb_testing
   dependencies:
     - msgs:foxy:amd64
     - msgs:foxy:armhf
     - msgs:galactic:amd64
 
-upload_stable:bionic:
+upload_stable:focal:
   extends: .upload_deb_stable
   dependencies:
     - msgs_stable:foxy:amd64
