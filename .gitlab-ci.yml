@@ -24,20 +24,20 @@ stages:
 #########################
 # Templates using anchors
 #########################
-.amd64_dashing_t: &amd64_dashing_job
-  image: ros:dashing-ros-base-bionic
+.amd64_foxy_t: &amd64_foxy_job
+  image: ros:foxy-ros-base-bionic
   tags:
     - amd64
     - docker
 
-.armhf_dashing_t: &armhf_dashing_job
-  image: ros:dashing-ros-base-bionic
+.armhf_foxy_t: &armhf_foxy_job
+  image: ros:foxy-ros-base-bionic
   tags:
     - armhf
     - docker
 
-.amd64_eloquent_t: &amd64_eloquent_job
-  image: ros:eloquent-ros-base-bionic
+.amd64_galactic_t: &amd64_galactic_job
+  image: ros:galactic-ros-base-bionic
   tags:
     - amd64
     - docker
@@ -113,60 +113,60 @@ stages:
 
 # Test (on every commit)
 ########################
-msgs:dashing:amd64:
-  <<: *amd64_dashing_job
+msgs:foxy:amd64:
+  <<: *amd64_foxy_job
   extends: .build_msgs_testing
 
-msgs:dashing:armhf:
-  <<: *armhf_dashing_job
+msgs:foxy:armhf:
+  <<: *armhf_foxy_job
   extends: .build_msgs_testing
 
-msgs:eloquent:amd64:
-  <<: *amd64_eloquent_job
+msgs:galactic:amd64:
+  <<: *amd64_galactic_job
   extends: .build_msgs_testing
 
-msgs_stable:dashing:amd64:
-  <<: *amd64_dashing_job
+msgs_stable:foxy:amd64:
+  <<: *amd64_foxy_job
   extends: .build_msgs
 
-msgs_stable:dashing:armhf:
-  <<: *armhf_dashing_job
+msgs_stable:foxy:armhf:
+  <<: *armhf_foxy_job
   extends: .build_msgs
 
-msgs_stable:eloquent:amd64:
-  <<: *amd64_eloquent_job
+msgs_stable:galactic:amd64:
+  <<: *amd64_galactic_job
   extends: .build_msgs
 
-test:dashing:amd64:
-  <<: *amd64_dashing_job
+test:foxy:amd64:
+  <<: *amd64_foxy_job
   extends: .test_clients
   dependencies:
-    - msgs:dashing:amd64
+    - msgs:foxy:amd64
 
-test:dashing:armhf:
-  <<: *armhf_dashing_job
+test:foxy:armhf:
+  <<: *armhf_foxy_job
   extends: .test_clients
   dependencies:
-    - msgs:dashing:armhf
+    - msgs:foxy:armhf
 
-test:eloquent:amd64:
-  <<: *amd64_eloquent_job
+test:galactic:amd64:
+  <<: *amd64_galactic_job
   extends: .test_clients
   dependencies:
-    - msgs:eloquent:amd64
+    - msgs:galactic:amd64
 
 # upload packages for master and tags
 #####################################
 upload_testing:bionic:
   extends: .upload_deb_testing
   dependencies:
-    - msgs:dashing:amd64
-    - msgs:dashing:armhf
-    - msgs:eloquent:amd64
+    - msgs:foxy:amd64
+    - msgs:foxy:armhf
+    - msgs:galactic:amd64
 
 upload_stable:bionic:
   extends: .upload_deb_stable
   dependencies:
-    - msgs_stable:dashing:amd64
-    - msgs_stable:dashing:armhf
-    - msgs_stable:eloquent:amd64
+    - msgs_stable:foxy:amd64
+    - msgs_stable:foxy:armhf
+    - msgs_stable:galactic:amd64
