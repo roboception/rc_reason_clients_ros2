@@ -90,7 +90,7 @@ class RestClient(Node):
 
         self.rest_param_names = None
         self.declare_rest_parameters()
-        self.set_parameters_callback(self.params_callback)
+        self.add_on_set_parameters_callback(self.params_callback)
 
         self.rest_services = []
 
