@@ -91,7 +91,7 @@ class HandEyeCalibClient(RestClient):
         self.add_rest_service(SetHandEyeCalibrationPose, 'set_pose', self.generic_cb)
 
         # get initial calibration from sensor
-        self.get_calib_cb('get_calibration', HandEyeCalibration.Request(), HandEyeCalibration.Response())
+        self.pub_cb('get_calibration', HandEyeCalibration.Request(), HandEyeCalibration.Response())
 
     def generic_cb(self, srv_name, request, response):
         self.call_rest_service(srv_name, request, response)
