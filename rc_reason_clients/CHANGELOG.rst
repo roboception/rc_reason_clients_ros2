@@ -1,3 +1,8 @@
+0.3.1 (2023-06-15)
+------------------
+
+* rc_hand_eye_calibration_client: fix getting inital calib
+
 0.3.0 (2022-02-08)
 ------------------
 
