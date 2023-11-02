@@ -20,6 +20,9 @@ float64 rim_step_height
 # Optional. Length of the rim ledge in x and y direction. This requires rim_thickness to be set.
 Rectangle rim_ledge
 
+# Optional. Height of the open side of a 3-sided load carrier measured from the outer bottom.
+float64 height_open_side
+
 # When setting a load carrier, this is the prior if frame_id is not empty (should be 'camera' or 'external')
 geometry_msgs/PoseStamped pose
 
