@@ -74,6 +74,7 @@ set(srv_files
   "srv/SetRegionOfInterest2D.srv"
   "srv/SetRegionOfInterest3D.srv"
   "srv/SilhouetteMatchDetectObject.srv"
+  "srv/WarmupTemplate.srv"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}

@@ -1,0 +1,9 @@
+# Description: Warms up template for faster first detection.
+
+# Required ID of the template that should be detected
+string template_id
+
+---
+
+rc_common_msgs/ReturnCode return_code
+

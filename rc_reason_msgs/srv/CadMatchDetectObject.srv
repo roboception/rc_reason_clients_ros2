@@ -21,6 +21,12 @@ geometry_msgs/Pose robot_pose
 # Optional. Enables collision checking of grasps with load carrier
 CollisionDetection collision_detection
 
+# Optional
+string[] pose_prior_ids
+
+# Optional. Whether to capture images or use last ones. Can be 'USE_LAST' or 'CAPTURE_NEW' (default).
+string data_acquisition_mode
+
 ---
 
 builtin_interfaces/Time timestamp
