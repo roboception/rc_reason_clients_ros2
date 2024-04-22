@@ -30,8 +30,8 @@ stages:
     - amd64
     - docker
 
-.amd64_galactic_t: &amd64_galactic_job
-  image: ros:galactic-ros-base-focal
+.amd64_humble_t: &amd64_humble_job
+  image: ros:humble-ros-base-jammy
   tags:
     - amd64
     - docker
@@ -111,16 +111,16 @@ msgs:foxy:amd64:
   <<: *amd64_foxy_job
   extends: .build_msgs_testing
 
-msgs:galactic:amd64:
-  <<: *amd64_galactic_job
+msgs:humble:amd64:
+  <<: *amd64_humble_job
   extends: .build_msgs_testing
 
 msgs_stable:foxy:amd64:
   <<: *amd64_foxy_job
   extends: .build_msgs
 
-msgs_stable:galactic:amd64:
-  <<: *amd64_galactic_job
+msgs_stable:humble:amd64:
+  <<: *amd64_humble_job
   extends: .build_msgs
 
 test:foxy:amd64:
@@ -129,11 +129,11 @@ test:foxy:amd64:
   dependencies:
     - msgs:foxy:amd64
 
-test:galactic:amd64:
-  <<: *amd64_galactic_job
+test:humble:amd64:
+  <<: *amd64_humble_job
   extends: .test_clients
   dependencies:
-    - msgs:galactic:amd64
+    - msgs:humble:amd64
 
 # upload packages for master and tags
 #####################################
@@ -141,10 +141,10 @@ upload_testing:focal:
   extends: .upload_deb_testing
   dependencies:
     - msgs:foxy:amd64
-    - msgs:galactic:amd64
+    - msgs:humble:amd64
 
 upload_stable:focal:
   extends: .upload_deb_stable
   dependencies:
     - msgs_stable:foxy:amd64
-    - msgs_stable:galactic:amd64
+    - msgs_stable:humble:amd64
