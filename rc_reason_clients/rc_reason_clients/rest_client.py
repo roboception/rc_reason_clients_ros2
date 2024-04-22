@@ -88,6 +88,11 @@ class RestClient(Node):
         self.declare_parameter('host', '', ParameterDescriptor(type=ParameterType.PARAMETER_STRING, read_only=True))
         self.host = self.get_parameter('host').value
 
+        self.declare_parameter('pipeline', 0, ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER, read_only=True))
+        self.pipeline = self.get_parameter('pipeline').value
+
+        self.api_node_prefix = f"http://{self.host}/api/v2/pipelines/{self.pipeline}/nodes/{self.rest_name}"
+
         self.rest_param_names = None
         self.declare_rest_parameters()
         self.add_on_set_parameters_callback(self.params_callback)
@@ -117,7 +122,7 @@ class RestClient(Node):
                 args = extract_values(request)
                 self.get_logger().debug(f'calling {service} with args: {args}')
 
-            url = f'http://{self.host}/api/v1/nodes/{self.rest_name}/services/{service}'
+            url = f'{self.api_node_prefix}/services/{service}'
             res = requests_retry_session().put(url, json={'args': args})
 
             j = res.json()
@@ -137,7 +142,7 @@ class RestClient(Node):
 
     def _get_rest_parameters(self):
         try:
-            url = f'http://{self.host}/api/v1/nodes/{self.rest_name}/parameters'
+            url = f'{self.api_node_prefix}/parameters'
             res = requests_retry_session().get(url)
             if res.status_code != 200:
                 self.get_logger().error(f"Getting parameters failed with status code: {res.status_code}")
@@ -149,7 +154,7 @@ class RestClient(Node):
 
     def _set_rest_parameters(self, parameters):
         try:
-            url = f'http://{self.host}/api/v1/nodes/{self.rest_name}/parameters'
+            url = f'{self.api_node_prefix}/parameters'
             res = requests_retry_session().put(url, json=parameters)
             j = res.json()
             self.get_logger().debug(f"set parameters response: {json.dumps(j, indent=2)}")
