@@ -1,3 +1,11 @@
+0.4.0 (2024-11-20)
+------------------
+
+* Grasp msg: add priority, gripper_id and collision_checked
+* LoadCarrier msg: add height_open_side for 3-sided LC
+* CadMatchDetectObject srv: add pose_prior_ids and data_acquisition_mode
+* SilhouetteMatchDetectObject srv: add object_plane_detection
+
 0.3.1 (2023-06-15)
 ------------------
 

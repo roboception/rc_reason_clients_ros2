@@ -1,3 +1,9 @@
+0.4.0 (2024-11-20)
+------------------
+
+* support 3-sided LoadCarriers
+* make pipeline configurable
+
 0.3.1 (2023-06-15)
 ------------------
 
