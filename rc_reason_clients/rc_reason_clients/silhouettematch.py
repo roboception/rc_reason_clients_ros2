@@ -106,10 +106,10 @@ class SilhouetteMatchClient(RestClient):
         self.pub_tf.publish(TFMessage(transforms=transforms))
 
     def publish_lcs(self, lcs):
-        if lcs and self.publish_tf:
+        if lcs and self.get_parameter('publish_tf').value:
             transforms = [load_carrier_to_tf(lc, i) for i, lc in enumerate(lcs)]
             self.pub_tf.publish(TFMessage(transforms=transforms))
-        if self.publish_markers:
+        if self.get_parameter('publish_markers').value:
             self.publish_lc_markers(lcs)
 
     def publish_lc_markers(self, lcs):
