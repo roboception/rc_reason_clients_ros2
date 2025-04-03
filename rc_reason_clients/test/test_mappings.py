@@ -1132,6 +1132,7 @@ def test_cadmatch_detect_object():
 
     # don't send robot_pose if pose_frame is camera
     assert "robot_pose" not in api_req
+    assert "load_carrier_compartment" not in api_req
 
     ros_req.pose_frame = "external"
     ros_req.robot_pose.position.y = 1.0
