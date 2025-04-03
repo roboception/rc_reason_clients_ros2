@@ -49,12 +49,21 @@ def map_ros2api(msg, rostype):
     elif rostype in ['rc_reason_msgs/DetectLoadCarriers_Request',
                      'rc_reason_msgs/DetectFillingLevel_Request',
                      'rc_reason_msgs/DetectTags_Request',
-                     'rc_reason_msgs/SilhouetteMatchDetectObject_Request',
-                     'rc_reason_msgs/CadMatchDetectObject_Request']:
+                     'rc_reason_msgs/SilhouetteMatchDetectObject_Request']:
         new_msg = copy.deepcopy(msg)
         # don't send robot pose if not external
         if msg['pose_frame'] != 'external':
             del new_msg['robot_pose']
+        return new_msg
+    elif rostype in ['rc_reason_msgs/CadMatchDetectObject_Request']:
+        new_msg = copy.deepcopy(msg)
+        # don't send robot pose if not external
+        if msg['pose_frame'] != 'external':
+            del new_msg['robot_pose']
+        if not msg['load_carrier_id']:
+            del new_msg['load_carrier_id']
+        if not all([msg['load_carrier_compartment']['box'][k] > 0 for k in ['x', 'y', 'z']]):
+            del new_msg['load_carrier_compartment']
         return new_msg
     elif rostype in ['rc_reason_msgs/ComputeGrasps_Request']:
         new_msg = {k: msg[k] for k in ['pose_frame', 'item_models', 'suction_surface_length', 'suction_surface_width']}
