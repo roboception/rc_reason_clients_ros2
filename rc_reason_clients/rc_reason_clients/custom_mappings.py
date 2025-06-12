@@ -205,6 +205,11 @@ def map_api2ros(msg, rostype):
             new_msg['match_uuid'] = msg['instance_uuid']
             del new_msg['instance_uuid']
         return new_msg
+    elif rostype == 'rc_reason_msgs/HandEyeCalibration_Response':
+        new_msg = copy.deepcopy(msg)
+        if 'tags' in new_msg:
+            del new_msg['tags']
+        return new_msg
 
     # no mapping required, return auto-generated one
     return msg
