@@ -2,18 +2,22 @@
 #Request
 #Slot in which the pose-image pair is stored.
 #Required for overwriting previously stored data (by using the same slot again).
-int32 slot
+uint32 slot
 geometry_msgs/Pose pose
 
 ---
 #True if grid was detected and stored together with the pose in the given slot
 bool success
+#True if detected calibration grid is overexposed
+bool overexposed
 #Internal status:
 #1: Grid detected, pose stored
 #3: Grid detected, pose stored. Ready to calibrate
 #4: Insufficient detection of the calibration pattern
 #8: No image data available
+#9: Could not acquire lock
 #12: Invalid orientation given (0,0,0)
+#13: Invalid slot number
 int32 status
 #Human readable message, for development
 string message
