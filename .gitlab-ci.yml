@@ -24,14 +24,20 @@ stages:
 #########################
 # Templates using anchors
 #########################
-.amd64_foxy_t: &amd64_foxy_job
-  image: ros:foxy-ros-base-focal
+.amd64_humble_t: &amd64_humble_job
+  image: ros:humble-ros-base-jammy
   tags:
     - amd64
     - docker
 
-.amd64_humble_t: &amd64_humble_job
-  image: ros:humble-ros-base-jammy
+.amd64_jazzy_t: &amd64_jazzy_job
+  image: ros:jazzy-ros-base-noble
+  tags:
+    - amd64
+    - docker
+
+.amd64_rolling_t: &amd64_rolling_job
+  image: ros:rolling-ros-base-noble
   tags:
     - amd64
     - docker
@@ -73,7 +79,7 @@ stages:
 
 .upload_deb:
   stage: upload
-  image: registry.roboception.de/tools/docker_images:focal-buildimage
+  image: registry.roboception.de/tools/docker_images:jammy-buildimage
   before_script:
      - export DISTRO_CODENAME=`lsb_release -cs` && echo Using distro $DISTRO_CODENAME
   script:
@@ -107,27 +113,29 @@ stages:
 
 # Test (on every commit)
 ########################
-msgs:foxy:amd64:
-  <<: *amd64_foxy_job
-  extends: .build_msgs_testing
-
 msgs:humble:amd64:
   <<: *amd64_humble_job
   extends: .build_msgs_testing
 
-msgs_stable:foxy:amd64:
-  <<: *amd64_foxy_job
-  extends: .build_msgs
+msgs:jazzy:amd64:
+  <<: *amd64_jazzy_job
+  extends: .build_msgs_testing
+
+msgs:rolling:amd64:
+  <<: *amd64_rolling_job
+  extends: .build_msgs_testing
 
 msgs_stable:humble:amd64:
   <<: *amd64_humble_job
   extends: .build_msgs
 
-test:foxy:amd64:
-  <<: *amd64_foxy_job
-  extends: .test_clients
-  dependencies:
-    - msgs:foxy:amd64
+msgs_stable:jazzy:amd64:
+  <<: *amd64_jazzy_job
+  extends: .build_msgs
+
+msgs_stable:rolling:amd64:
+  <<: *amd64_rolling_job
+  extends: .build_msgs
 
 test:humble:amd64:
   <<: *amd64_humble_job
@@ -135,16 +143,40 @@ test:humble:amd64:
   dependencies:
     - msgs:humble:amd64
 
+test:jazzy:amd64:
+  <<: *amd64_jazzy_job
+  extends: .test_clients
+  dependencies:
+    - msgs:jazzy:amd64
+
+test:rolling:amd64:
+  <<: *amd64_rolling_job
+  extends: .test_clients
+  dependencies:
+    - msgs:rolling:amd64
+
 # upload packages for master and tags
 #####################################
-upload_testing:focal:
+upload_testing:jammy:
   extends: .upload_deb_testing
   dependencies:
-    - msgs:foxy:amd64
     - msgs:humble:amd64
 
-upload_stable:focal:
+upload_stable:jammy:
   extends: .upload_deb_stable
   dependencies:
-    - msgs_stable:foxy:amd64
     - msgs_stable:humble:amd64
+
+upload_testing:noble:
+  extends: .upload_deb_testing
+  image: registry.roboception.de/tools/docker_images:noble-buildimage
+  dependencies:
+    - msgs:jazzy:amd64
+    - msgs:rolling:amd64
+
+upload_stable:noble:
+  extends: .upload_deb_stable
+  image: registry.roboception.de/tools/docker_images:noble-buildimage
+  dependencies:
+    - msgs_stable:jazzy:amd64
+    - msgs_stable:rolling:amd64
