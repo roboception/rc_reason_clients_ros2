@@ -33,6 +33,7 @@
 
 import rclpy
 from rclpy.clock import ROSClock
+from rclpy import logging
 
 import numpy as np
 from array import array
@@ -300,7 +301,9 @@ def _to_object_inst(msg, rostype, roottype, inst, stack):
 
         # Raise an exception if the msg contains a bad field
         if not field_name in inst_fields:
-            raise NonexistentFieldException(roottype, field_stack)
+            logging.get_logger("message_conversion").warn(f"Message type {roottype} does not have a field {'.'.join(field_stack)}")
+            continue
+            #raise NonexistentFieldException(roottype, field_stack)
 
         field_rostype = inst_fields[field_name]
         field_inst = getattr(inst, field_name)
