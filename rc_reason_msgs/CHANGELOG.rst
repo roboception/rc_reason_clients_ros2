@@ -1,3 +1,8 @@
+0.5.0 (2025-07-30)
+------------------
+
+* add overexposed field to SetHandEyeCalibrationPose_Response
+
 0.4.0 (2024-11-20)
 ------------------
 

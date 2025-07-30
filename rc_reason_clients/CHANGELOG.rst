@@ -1,3 +1,12 @@
+0.5.0 (2025-07-30)
+------------------
+
+* SilhouetteMatchClient: fix publish params
+* CadMatchDetectObject: don't send LC compartment if box invalid
+* message_conversion: ignore extra field in json when converting to ROS messages
+* ignore tags in HandEyeCalibration_Response
+* setup.py: replace deprecated tests_require with extras_require
+
 0.4.0 (2024-11-20)
 ------------------
 
