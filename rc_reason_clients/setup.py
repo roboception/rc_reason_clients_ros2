@@ -17,7 +17,7 @@ setup(
     maintainer_email='felix.ruess@roboception.de',
     description='Clients for interfacing with Roboception reason modules on rc_visard and rc_cube.',
     license='BSD',
-    tests_require=['pytest'],
+    extras_require={'test': ['pytest']},
     entry_points={
         'console_scripts': [
             'rc_april_tag_detect_client = rc_reason_clients.tagdetect:rc_april_tag_detect_client',
