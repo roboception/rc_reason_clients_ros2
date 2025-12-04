@@ -48,6 +48,7 @@ set(msg_files
   "msg/SilhouetteMatchObject.msg"
   "msg/SuctionGrasp.msg"
   "msg/Tag.msg"
+  "msg/TexturedBox.msg"
 )
 
 set(srv_files
