@@ -1,9 +1,9 @@
 rc_reason_clients for ROS2
 ==========================
 
-ROS2 clients for interfacing via REST with the [Roboception rc_visard](https://roboception.com/rc_visard) 3D sensor.
+ROS2 clients for interfacing via REST with the [Roboception rc_reason software suite](https://roboception.com/rc-reason-software-suite/).
 
-Please also consult the manual for more details: https://doc.rc-visard.com
+Please also consult the manual of the rc_cube for more details: https://doc.rc-cube.com
 
 For details on the client nodes, see the [rc_reason_clients README](rc_reason_clients/README.md).
 
