@@ -21,6 +21,9 @@ CollisionDetection collision_detection
 # Optional. Activates SilhouetteMatch from automatically detected planes
 bool object_plane_detection
 
+# Optional. Chooses segmentation model for SilhouetteMatchAI. Only used if object_plane_detection is true. Allowed values: SHEET_METAL, NONE
+string object_segmentation_model
+
 ---
 
 builtin_interfaces/Time timestamp
