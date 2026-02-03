@@ -9,3 +9,8 @@ install
 !.gitlab-ci.yml
 !.gitmodules
 !.clang-format
+log/
+__pycache__/
+*.py[cod]
+
+rc_reason_clients/rc_reason_clients/generated/
