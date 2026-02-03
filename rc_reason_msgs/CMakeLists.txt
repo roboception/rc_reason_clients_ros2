@@ -28,6 +28,7 @@ find_package(rc_common_msgs REQUIRED)
 set(msg_files
   "msg/Box.msg"
   "msg/CellFillingLevel.msg"
+  "msg/ImageEvent.msg"
   "msg/CollisionDetection.msg"
   "msg/Compartment.msg"
   "msg/DetectedTag.msg"

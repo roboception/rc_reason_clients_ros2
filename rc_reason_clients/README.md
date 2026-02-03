@@ -4,8 +4,9 @@ rc_reason_clients for ROS2
 This package provides ROS2 client nodes that interface with Roboception devices like the [rc_visard](https://roboception.com/rc_visard) 3D sensor and [rc_cube](https://roboception.com/rc_cube).
 
 Please consult the manuals for detailed descriptions of parameters and services:
-* https://doc.rc-visard.com
-* https://doc.rc-cube.com
+
+* <https://doc.rc-visard.com>
+* <https://doc.rc-cube.com>
 
 These rc_reason client nodes communicate with the device via REST-API and make the functionality available in a ROS2 native way:
 
@@ -26,7 +27,7 @@ Additionally every client has a `host` parameter which needs to be set to the IP
 
 Example to run the april tag detection client for pipeline 1:
 
-```
+```bash
 ros2 run rc_reason_clients rc_april_tag_detect_client --ros-args --param host:=10.0.2.40 --param pipeline:=1
 ```
 
@@ -169,3 +170,36 @@ The client has an additional parameters to enable publishing of detected load ca
 
 To run the client:
 `ros2 run rc_reason_clients rc_cadmatch_client --ros-args --param host:=10.0.2.40`
+
+rc_image_event_client
+---------------------
+
+Client to interface with the image events via gRPC.
+Publishes a `rc_reason_msgs/ImageEvent` message when a specific event (e.g. depth acquisition finished) is received.
+
+Topic: `~/depth_acquisition_done`
+
+Parameters:
+
+* `host`: Device IP address (mandatory)
+* `pipeline`: Pipeline index (default: 0). The gRPC port is automatically determined as `50051 + pipeline`.
+* `port`: gRPC port (default: 50051 + pipeline)
+* `depth_acquisition_done_enabled`: Enable/disable depth acquisition events (default: True)
+* `reconnect_interval`: Interval in seconds to attempt reconnection on gRPC failure (default: 2.0)
+
+Example:
+`ros2 run rc_reason_clients rc_image_event_client --ros-args -p host:=10.0.1.108 -p pipeline:=2`
+
+
+
+Known Issues
+**Ubuntu 22.04 (ROS 2 Humble):**
+
+The system package `python3-grpcio` (v1.30.2) on Ubuntu 22.04 has a [known bug](https://bugs.launchpad.net/ubuntu/+source/grpc/+bug/1971114) causing the client to hang with 100% CPU load at "Starting ImageEventClient connecting to...".
+
+**Workaround:** Install `grpcio` and `grpcio-tools` via `pip` instead of using the system package:
+
+```bash
+sudo apt remove python3-grpcio python3-grpc-tools
+pip3 install grpcio grpcio-tools protobuf
+```

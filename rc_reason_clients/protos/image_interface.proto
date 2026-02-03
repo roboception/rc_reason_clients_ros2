@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+// Service name found on device: ImageEventsInterface (no package prefix)
+
+message DepthAcquisitionDone {
+  // Timestamp is typically uint64 nanoseconds in Roboception interfaces
+  uint64 timestamp = 1;
+}
+
+message ImageEvents {
+  DepthAcquisitionDone depth_acquisition_done = 1;
+  uint64 imageset_timestamp = 2;
+}
+
+message ImageEventsRequest {
+  bool depth_acquisition_done_enabled = 1;
+}
+
+service ImageEventsInterface {
+  rpc StreamImageEvents(ImageEventsRequest) returns (stream ImageEvents);
+}
