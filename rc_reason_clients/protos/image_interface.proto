@@ -1,21 +1,116 @@
 syntax = "proto3";
 
-// Service name found on device: ImageEventsInterface (no package prefix)
-
-message DepthAcquisitionDone {
-  // Timestamp is typically uint64 nanoseconds in Roboception interfaces
-  uint64 timestamp = 1;
+message Time
+{
+  int32 sec = 1; ///< Seconds
+  int32 nsec = 2; ///< Nanoseconds
 }
 
-message ImageEvents {
-  DepthAcquisitionDone depth_acquisition_done = 1;
-  uint64 imageset_timestamp = 2;
+message Gpios
+{
+  uint32 inputs  = 1; ///< bitmask of available inputs
+  uint32 outputs = 2; ///< bitmask of available outputs
+  uint32 values  = 3; ///< bitmask of GPIO values
 }
 
-message ImageEventsRequest {
-  bool depth_acquisition_done_enabled = 1;
+message Image
+{
+  Time timestamp           = 1; ///< Acquisition timestamp of the image
+  uint32 height            = 2; ///< image height (number of rows)
+  uint32 width             = 3; ///< image width (number of columns)
+  float focal_length       = 4; ///< focal length in pixels
+  float principal_point_u  = 5; ///< horizontal position of the principal point
+  float principal_point_v  = 6; ///< vertical position of the principal point
+  string encoding          = 7; ///< Encoding of pixels ["mono8", "mono16", "rgb8"]
+  bool is_bigendian        = 8; ///< is data bigendian, (in our case false)
+  uint32 step              = 9; ///< full row length in bytes
+  bytes data               = 10; ///< actual matrix data, size is (step * height)
+  Gpios gpios              = 11; ///< GPIOs as of acquisition timestamp
+  float exposure_time      = 12; ///< exposure time in seconds
+  float gain               = 13; ///< gain factor in decibel
+  float noise              = 14; ///< noise
+  float out1_reduction     = 16; ///< Fraction of reduction (0.0 - 1.0) of exposure time for images with GPIO Out1=Low in exp_auto_mode=AdaptiveOut1
+  float brightness         = 17; ///< Current brightness of the image as value between 0 and 1
 }
 
-service ImageEventsInterface {
-  rpc StreamImageEvents(ImageEventsRequest) returns (stream ImageEvents);
+message DisparityImage
+{
+  Time timestamp           = 1; ///< Acquisition timestamp of the image
+  float scale              = 2; ///< scale factor
+  float offset             = 3; ///< offset in pixels (in our case 0)
+  float invalid_data_value = 4; ///< value used to mark pixels as invalid (in our case 0)
+  float baseline           = 5; ///< baseline in meters
+  float delta_d            = 6; ///< Smallest allowed disparity increment. The smallest achievable depth range resolution is delta_Z = (Z^2/image.focal_length*baseline)*delta_d.
+  Image image              = 7; ///< disparity image
+}
+
+message Mesh
+{
+  Time timestamp           = 1; ///< Acquisition timestamp of disparity image from which the mesh is computed
+  string format            = 2; ///< currently only "ply" is supported
+  bytes data               = 3; ///< actual mesh data
+}
+
+message ImageSet
+{
+  Time timestamp             = 1;
+  Image left                 = 2;
+  Image right                = 3;
+  DisparityImage disparity   = 4;
+  Image disparity_error      = 5;
+  Image confidence           = 6;
+  Mesh mesh                  = 7;
+}
+
+message MeshOptions
+{
+  uint32 max_points            = 1; ///< limit maximum number of points, zero means default (up to 3.1MP), minimum is 1000
+  enum BinningMethod {
+    AVERAGE = 0;                    ///< average over all points in bin
+    MIN_DEPTH = 1;                  ///< use point with minimum depth (i.e. closest to camera) in bin
+  }
+  BinningMethod binning_method = 2; ///< method used for binning if limited by max_points
+  bool watertight              = 3; ///< connect all edges and fill all holes, e.g. for collision checking
+  bool textured                = 4; ///< add texture information to mesh
+}
+
+message ImageSetRequest
+{
+  bool left_enabled            = 1;
+  bool right_enabled           = 2;
+  bool disparity_enabled       = 3;
+  bool disparity_error_enabled = 4;
+  bool confidence_enabled      = 5;
+  bool mesh_enabled            = 6;
+  MeshOptions mesh_options     = 7;
+  bool color                   = 8; ///< send left/right image as color (rgb8) images
+}
+
+service ImageInterface
+{
+  // A server-to-client streaming RPC.
+  rpc StreamImageSets(ImageSetRequest) returns (stream ImageSet) {}
+}
+
+message Event
+{
+  Time timestamp = 1; ///< timestamp of the event
+  string message = 2; ///< optional message of the event
+}
+
+message ImageEvents
+{
+  Time imageset_timestamp      = 1; ///< timestamp of the ImageSet that the event belongs to
+  Event depth_acquisition_done = 2; ///< Depth image acquisition is done (e.g. stereo images captured)
+}
+
+message ImageEventsRequest
+{
+  bool depth_acquisition_done_enabled = 1; ///< send event when depth acquisition is done
+}
+
+service ImageEventsInterface
+{
+  // A server-to-client streaming RPC.
+  rpc StreamImageEvents(ImageEventsRequest) returns (stream ImageEvents) {}
 }

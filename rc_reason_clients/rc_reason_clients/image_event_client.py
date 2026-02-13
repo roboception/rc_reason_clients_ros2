@@ -38,10 +38,6 @@ from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from rc_reason_clients.generated import image_interface_pb2_grpc, image_interface_pb2
 
 
-def uint64_to_ros_time(timestamp):
-    seconds = timestamp // 1_000_000_000
-    nanos = timestamp % 1_000_000_000
-    return int(seconds), int(nanos)
 
 
 class ImageEventClient(Node):
@@ -128,21 +124,19 @@ class ImageEventClient(Node):
 
                     if event.HasField("depth_acquisition_done"):
                         da_event = event.depth_acquisition_done
-
+                        
                         msg = ImageEvent()
 
-                        # Header timestamp from event
+                        # Header timestamp from event.timestamp (Time message)
                         header = Header()
-                        sec, nanosec = uint64_to_ros_time(da_event.timestamp)
-                        header.stamp.sec = sec
-                        header.stamp.nanosec = nanosec
+                        header.stamp.sec = int(da_event.timestamp.sec)
+                        header.stamp.nanosec = int(da_event.timestamp.nsec)
                         header.frame_id = "rc_visard"
                         msg.header = header
 
-                        # Imageset timestamp
-                        sec, nanosec = uint64_to_ros_time(event.imageset_timestamp)
-                        msg.imageset_stamp.sec = sec
-                        msg.imageset_stamp.nanosec = nanosec
+                        # Imageset timestamp (Time message)
+                        msg.imageset_stamp.sec = int(event.imageset_timestamp.sec)
+                        msg.imageset_stamp.nanosec = int(event.imageset_timestamp.nsec)
 
                         self.pub_depth_acquisition_done.publish(msg)
 
