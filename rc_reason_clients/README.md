@@ -22,6 +22,7 @@ Running
 --------
 
 The parameters and services of each client have the same names as in the REST-API (see [documentation](https://doc.rc-cube.com)).
+Reason client nodes automatically provide the `trigger_dump` service if supported by the device and module. Note that certain hardware may require a mounted USB device to save the dump.
 
 Additionally every client has a `host` parameter which needs to be set to the IP address or hostname of the device (i.e. rc_cube or rc_visard) and a `pipeline` parameter which defaults to 0:
 
