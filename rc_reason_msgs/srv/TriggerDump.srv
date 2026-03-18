@@ -1,0 +1,12 @@
+# Trigger dumping of detection. Either specific one matching timestamp or the latest.
+
+# Optional. Timestamp of the detection to be dumped.
+builtin_interfaces/Time timestamp
+
+# Optional. Comment to be associated with the dump.
+string comment
+
+---
+
+# Return code of the service call.
+rc_common_msgs/ReturnCode return_code

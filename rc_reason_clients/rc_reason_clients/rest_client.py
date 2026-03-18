@@ -98,6 +98,7 @@ class RestClient(Node):
         self.add_on_set_parameters_callback(self.params_callback)
 
         self.rest_services = []
+        self._add_optional_services()
 
     def declare_rest_parameters(self):
         rest_params = [p for p in self._get_rest_parameters() if p['name'] not in self.ignored_parameters]
@@ -173,3 +174,17 @@ class RestClient(Node):
         """create a service and inject the REST-API service name"""
         srv = self.create_service(srv_type, f"{self.get_name()}/{srv_name}", partial(callback, srv_name))
         self.rest_services.append(srv)
+
+    def trigger_dump_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
+        return response
+
+    def _add_optional_services(self):
+        try:
+            url = f"{self.api_node_prefix}/services/trigger_dump"
+            res = requests_retry_session().get(url)
+            if res.status_code == 200:
+                from rc_reason_msgs.srv import TriggerDump
+                self.add_rest_service(TriggerDump, 'trigger_dump', self.trigger_dump_cb)
+        except Exception as e:
+            self.get_logger().error(f"Error checking for optional services: {e}")
