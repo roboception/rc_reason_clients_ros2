@@ -10,6 +10,7 @@ string TEXTURED_BOX=TEXTURED_BOX
 string BAG=BAG
 string CONSUMER_GOODS=CONSUMER_GOODS
 string SHEET_METAL=SHEET_METAL
+string MAIL_ITEMS=MAIL_ITEMS
 
 # Only one of those required depending on the selected type
 # In case of unknown type, these values defines an optional bounding box for the item

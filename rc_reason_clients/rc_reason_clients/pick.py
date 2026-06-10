@@ -78,7 +78,7 @@ class PickClient(RestClient):
             True,
             ParameterDescriptor(
                 type=ParameterType.PARAMETER_BOOL,
-                description="Publish detected loadcarriers and items via TF"
+                description="Publish detected load carriers and items via TF"
             )
         )
         self.declare_parameter(
@@ -86,7 +86,7 @@ class PickClient(RestClient):
             True,
             ParameterDescriptor(
                 type=ParameterType.PARAMETER_BOOL,
-                description="Publish detected loadcarriers and grasps as visalization markers"
+                description="Publish detected load carriers and grasps as visualization markers"
             )
         )
         self.grasp_markers = []
