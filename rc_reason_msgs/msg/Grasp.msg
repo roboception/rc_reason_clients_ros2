@@ -23,4 +23,7 @@ float64 stroke_per_finger_approach_mm
 # Optional. stroke per finger for the FINGER elements of the given gripper ID while grasping
 float64 stroke_per_finger_grasp_mm
 
+# Optional. If a multi-tcp gripper is used, the ID of the tcp used for collision checking.
+string tcp_id
+
 bool collision_checked

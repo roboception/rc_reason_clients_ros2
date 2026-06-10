@@ -14,6 +14,9 @@ geometry_msgs/PoseStamped pose
 # Optional. The quality of the grasp (between 0 and 1)
 float64 quality
 
+# Optional. If a multi-tcp gripper is used, the ID of the tcp used for collision checking.
+string tcp_id
+
 # Optional. The axis lengths of the biggest ellipse inscribed on the suction surface
 float64 max_suction_surface_length
 float64 max_suction_surface_width
