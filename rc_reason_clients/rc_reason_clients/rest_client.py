@@ -175,16 +175,21 @@ class RestClient(Node):
         srv = self.create_service(srv_type, f"{self.get_name()}/{srv_name}", partial(callback, srv_name))
         self.rest_services.append(srv)
 
+    def rest_service_available(self, srv_name):
+        """check whether the device/module offers the given REST service"""
+        try:
+            url = f"{self.api_node_prefix}/services/{srv_name}"
+            res = requests_retry_session().get(url)
+            return res.status_code == 200
+        except Exception as e:
+            self.get_logger().error(f"Error checking for service {srv_name}: {e}")
+            return False
+
     def trigger_dump_cb(self, srv_name, request, response):
         self.call_rest_service(srv_name, request, response)
         return response
 
     def _add_optional_services(self):
-        try:
-            url = f"{self.api_node_prefix}/services/trigger_dump"
-            res = requests_retry_session().get(url)
-            if res.status_code == 200:
-                from rc_reason_msgs.srv import TriggerDump
-                self.add_rest_service(TriggerDump, 'trigger_dump', self.trigger_dump_cb)
-        except Exception as e:
-            self.get_logger().error(f"Error checking for optional services: {e}")
+        if self.rest_service_available('trigger_dump'):
+            from rc_reason_msgs.srv import TriggerDump
+            self.add_rest_service(TriggerDump, 'trigger_dump', self.trigger_dump_cb)

@@ -181,7 +181,8 @@ class ItemPickClient(PickClient):
     def __init__(self, rest_name):
         super().__init__(rest_name)
         self.add_rest_service(ComputeGrasps, 'compute_grasps', self.compute_grasps_cb)
-        self.add_rest_service(DetectItems, 'detect_items', self.detect_items_cb)
+        if self.rest_service_available('detect_items'):
+            self.add_rest_service(DetectItems, 'detect_items', self.detect_items_cb)
 
     def compute_grasps_cb(self, srv_name, request, response):
         self.call_rest_service(srv_name, request, response)
@@ -195,7 +196,8 @@ class BoxPickClient(PickClient):
     def __init__(self, rest_name):
         super().__init__(rest_name)
         self.add_rest_service(ComputeGrasps, 'compute_grasps', self.compute_grasps_cb)
-        self.add_rest_service(DetectItems, 'detect_items', self.detect_items_cb)
+        if self.rest_service_available('detect_items'):
+            self.add_rest_service(DetectItems, 'detect_items', self.detect_items_cb)
 
     def compute_grasps_cb(self, srv_name, request, response):
         self.call_rest_service(srv_name, request, response)
