@@ -161,34 +161,6 @@ class PickClient(RestClient):
         self.pub_markers.publish(MarkerArray(markers=self.lc_markers))
         self.lc_markers = new_markers
 
-
-class ItemPickClient(PickClient):
-
-    def __init__(self, rest_name):
-        super().__init__(rest_name)
-        self.add_rest_service(ComputeGrasps, 'compute_grasps', self.compute_grasps_cb)
-
-    def compute_grasps_cb(self, srv_name, request, response):
-        self.call_rest_service(srv_name, request, response)
-        self.publish_lcs(response.load_carriers)
-        self.publish_grasps(response.grasps)
-        return response
-
-
-class BoxPickClient(PickClient):
-
-    def __init__(self, rest_name):
-        super().__init__(rest_name)
-        self.add_rest_service(ComputeGrasps, 'compute_grasps', self.compute_grasps_cb)
-        self.add_rest_service(DetectItems, 'detect_items', self.detect_items_cb)
-
-    def compute_grasps_cb(self, srv_name, request, response):
-        self.call_rest_service(srv_name, request, response)
-        self.publish_lcs(response.load_carriers)
-        self.publish_grasps(response.grasps)
-        self.publish_items(response.items)
-        return response
-
     def detect_items_cb(self, srv_name, request, response):
         self.call_rest_service(srv_name, request, response)
         self.publish_lcs(response.load_carriers)
@@ -202,6 +174,37 @@ class BoxPickClient(PickClient):
             return
         transforms = [item_to_tf(item, i) for i, item in enumerate(items)]
         self.pub_tf.publish(TFMessage(transforms=transforms))
+
+
+class ItemPickClient(PickClient):
+
+    def __init__(self, rest_name):
+        super().__init__(rest_name)
+        self.add_rest_service(ComputeGrasps, 'compute_grasps', self.compute_grasps_cb)
+        if self.rest_service_available('detect_items'):
+            self.add_rest_service(DetectItems, 'detect_items', self.detect_items_cb)
+
+    def compute_grasps_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
+        self.publish_lcs(response.load_carriers)
+        self.publish_grasps(response.grasps)
+        return response
+
+
+class BoxPickClient(PickClient):
+
+    def __init__(self, rest_name):
+        super().__init__(rest_name)
+        self.add_rest_service(ComputeGrasps, 'compute_grasps', self.compute_grasps_cb)
+        if self.rest_service_available('detect_items'):
+            self.add_rest_service(DetectItems, 'detect_items', self.detect_items_cb)
+
+    def compute_grasps_cb(self, srv_name, request, response):
+        self.call_rest_service(srv_name, request, response)
+        self.publish_lcs(response.load_carriers)
+        self.publish_grasps(response.grasps)
+        self.publish_items(response.items)
+        return response
 
 
 def main(args=None, rest_node='rc_itempick'):
