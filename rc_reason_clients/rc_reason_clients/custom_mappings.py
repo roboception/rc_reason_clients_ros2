@@ -78,6 +78,8 @@ def map_ros2api(msg, rostype):
                 new_msg['load_carrier_compartment'] = msg['load_carrier_compartment']
         if msg['collision_detection']['gripper_id']:
             new_msg['collision_detection'] = msg['collision_detection']
+        if msg['dimensioning']['plane_ids']:
+            new_msg['dimensioning'] = msg['dimensioning']
         return new_msg
     elif rostype in ['rc_reason_msgs/DetectItems_Request']:
         new_msg = {k: msg[k] for k in ['pose_frame', 'item_models']}
@@ -90,6 +92,8 @@ def map_ros2api(msg, rostype):
             new_msg['load_carrier_id'] = msg['load_carrier_id']
             if all([msg['load_carrier_compartment']['box'][k] > 0 for k in ['x', 'y', 'z']]):
                 new_msg['load_carrier_compartment'] = msg['load_carrier_compartment']
+        if msg['dimensioning']['plane_ids']:
+            new_msg['dimensioning'] = msg['dimensioning']
         return new_msg
     elif rostype == 'rc_reason_msgs/RegionOfInterest3D':
         new_msg = {'id': msg['id'], 'pose': msg['pose']['pose'], 'pose_frame': msg['pose']['header']['frame_id']}

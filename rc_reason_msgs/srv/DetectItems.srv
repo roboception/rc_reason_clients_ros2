@@ -23,6 +23,9 @@ ItemModel[] item_models
 # Required only if reference frame = external and sensor is robot-mounted
 geometry_msgs/Pose robot_pose
 
+# Optional. Enables dimensioning of the detected items with respect to the given plane
+Dimensioning dimensioning
+
 ---
 
 builtin_interfaces/Time timestamp

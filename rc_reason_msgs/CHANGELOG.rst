@@ -1,3 +1,9 @@
+Forthcoming
+-----------
+
+* ComputeGrasps and DetectItems srv: add optional dimensioning
+* Item msg: add types BOX and TEXTURED_BOX and box field for dimensioned BoxPick items
+
 0.5.0 (2025-07-30)
 ------------------
 

@@ -136,6 +136,12 @@ def assert_grasp(ros_grasp, api_grasp):
 def assert_item(ros_item, api_item):
     assert_pose(ros_item.pose.pose, api_item["pose"])
     assert_header(ros_item.pose.header, api_item["timestamp"], api_item["pose_frame"])
+    assert ros_item.uuid == api_item["uuid"]
+    assert ros_item.type == api_item["type"]
+    if "rectangle" in api_item:
+        assert_primitives(ros_item.rectangle, api_item["rectangle"])
+    if "box" in api_item:
+        assert_primitives(ros_item.box, api_item["box"])
 
 
 def assert_match(ros_match, api_match):
@@ -678,6 +684,11 @@ def test_compute_grasps():
     ros_req.collision_detection.pre_grasp_offset.z = -0.5
     api_req = extract_values(ros_req)
     assert_primitives(ros_req.collision_detection, api_req["collision_detection"])
+    assert "dimensioning" not in api_req
+
+    ros_req.dimensioning.plane_ids = ["table"]
+    api_req = extract_values(ros_req)
+    assert api_req["dimensioning"] == {"plane_ids": ["table"]}
 
     api_res = {
         "timestamp": {"sec": 1587033051, "nsec": 179231838},
@@ -810,6 +821,11 @@ def test_detect_items():
     assert_primitives(
         ros_req.load_carrier_compartment, api_req["load_carrier_compartment"]
     )
+    assert "dimensioning" not in api_req
+
+    ros_req.dimensioning.plane_ids = ["table"]
+    api_req = extract_values(ros_req)
+    assert api_req["dimensioning"] == {"plane_ids": ["table"]}
 
     api_res = {
         "timestamp": {"sec": 1587035449, "nsec": 321465164},
@@ -877,6 +893,17 @@ def test_detect_items():
                 },
                 "type": "RECTANGLE",
                 "rectangle": {"y": 0.05739744695533501, "x": 0.10506054260132827},
+            },
+            {
+                "uuid": "ee0b3312-7fd2-11ea-a789-00142d2cd4ce",
+                "pose_frame": "camera",
+                "timestamp": {"sec": 1587035449, "nsec": 321465164},
+                "pose": {
+                    "position": {"y": 0.05, "x": -0.1, "z": 0.95},
+                    "orientation": {"y": 0.0, "x": 1.0, "z": 0.0, "w": 0.0},
+                },
+                "type": "BOX",
+                "box": {"y": 0.06, "x": 0.1, "z": 0.05},
             },
         ],
     }

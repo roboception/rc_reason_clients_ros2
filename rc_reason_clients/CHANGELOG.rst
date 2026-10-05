@@ -1,3 +1,8 @@
+Forthcoming
+-----------
+
+* ItemPick/BoxPick: support optional dimensioning in compute_grasps and detect_items
+
 0.5.0 (2025-07-30)
 ------------------
 
