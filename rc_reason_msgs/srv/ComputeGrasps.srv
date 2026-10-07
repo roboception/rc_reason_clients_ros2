@@ -27,6 +27,9 @@ geometry_msgs/Pose robot_pose
 # Optional. Enables collision checking of grasps with load carrier
 CollisionDetection collision_detection
 
+# Optional. Enables dimensioning of the detected items with respect to the given plane
+Dimensioning dimensioning
+
 ---
 
 builtin_interfaces/Time timestamp

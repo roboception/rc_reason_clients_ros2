@@ -32,6 +32,7 @@ set(msg_files
   "msg/CollisionDetection.msg"
   "msg/Compartment.msg"
   "msg/DetectedTag.msg"
+  "msg/Dimensioning.msg"
   "msg/Grasp.msg"
   "msg/GridSize.msg"
   "msg/Item.msg"
