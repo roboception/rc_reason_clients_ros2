@@ -1,18 +1,22 @@
+import subprocess
+import sys
+from glob import glob
+from pathlib import Path
+
 from setuptools import setup
+from setuptools.command.build_py import build_py
+from setuptools.command.develop import develop
 
 package_name = "rc_reason_clients"
 
-import subprocess
-import sys
-from pathlib import Path
-from glob import glob
+HERE = Path(__file__).resolve().parent
 
 
 def generate_protos():
-    proto_dir = Path("protos")
+    proto_dir = HERE / "protos"
     # The python package directory is ./rc_reason_clients
     # We want to output to ./rc_reason_clients/generated
-    out_dir = Path(package_name) / "generated"
+    out_dir = HERE / package_name / "generated"
 
     protos = glob(str(proto_dir / "*.proto"))
     if not protos:
@@ -53,7 +57,21 @@ def generate_protos():
             f.write(content)
 
 
-generate_protos()
+# Generate the protos only in the commands that actually build/install the package.
+# Doing it at import time would also run it for e.g. "setup.py clean", which the ROS
+# buildfarm calls when creating the source package without installing build
+# dependencies (grpc_tools), failing with ModuleNotFoundError.
+class BuildPyWithProtos(build_py):
+    def run(self):
+        generate_protos()
+        super().run()
+
+
+class DevelopWithProtos(develop):
+    def run(self):
+        generate_protos()
+        super().run()
+
 
 setup(
     name=package_name,
@@ -65,6 +83,7 @@ setup(
     ],
     install_requires=["setuptools"],
     zip_safe=True,
+    cmdclass={"build_py": BuildPyWithProtos, "develop": DevelopWithProtos},
     maintainer="Felix Ruess",
     maintainer_email="felix.ruess@roboception.de",
     description="Clients for interfacing with Roboception reason modules on rc_visard and rc_cube.",
