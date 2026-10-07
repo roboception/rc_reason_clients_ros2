@@ -2,6 +2,7 @@ Forthcoming
 -----------
 
 * ItemPick/BoxPick: support optional dimensioning in compute_grasps and detect_items
+* add rest_port parameter to configure the REST-API port
 
 0.5.0 (2025-07-30)
 ------------------

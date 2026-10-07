@@ -24,12 +24,19 @@ Running
 The parameters and services of each client have the same names as in the REST-API (see [documentation](https://doc.rc-cube.com)).
 Reason client nodes automatically provide the `trigger_dump` service if supported by the device and module. Note that certain hardware may require a mounted USB device to save the dump.
 
-Additionally every client has a `host` parameter which needs to be set to the IP address or hostname of the device (i.e. rc_cube or rc_visard) and a `pipeline` parameter which defaults to 0:
+Additionally every client has a `host` parameter which needs to be set to the IP address or hostname of the device (i.e. rc_cube or rc_visard) and a `pipeline` parameter which defaults to 0.
+The port of the REST-API can be set via the `rest_port` parameter (default: 80).
 
 Example to run the april tag detection client for pipeline 1:
 
 ```bash
 ros2 run rc_reason_clients rc_april_tag_detect_client --ros-args --param host:=10.0.2.40 --param pipeline:=1
+```
+
+Example to connect to a REST-API on a non-default port:
+
+```bash
+ros2 run rc_reason_clients rc_april_tag_detect_client --ros-args --param host:=10.0.2.40 --param rest_port:=8080
 ```
 
 rc_april_tag_detect_client and rc_qr_code_detect_client

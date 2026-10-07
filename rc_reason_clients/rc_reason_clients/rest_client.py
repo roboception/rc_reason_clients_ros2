@@ -91,7 +91,13 @@ class RestClient(Node):
         self.declare_parameter('pipeline', 0, ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER, read_only=True))
         self.pipeline = self.get_parameter('pipeline').value
 
-        self.api_node_prefix = f"http://{self.host}/api/v2/pipelines/{self.pipeline}/nodes/{self.rest_name}"
+        self.declare_parameter('rest_port', 80,
+                               ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER, read_only=True,
+                                                   description='Port of the REST-API on the device',
+                                                   integer_range=[IntegerRange(from_value=1, to_value=65535)]))
+        self.rest_port = self.get_parameter('rest_port').value
+
+        self.api_node_prefix = f"http://{self.host}:{self.rest_port}/api/v2/pipelines/{self.pipeline}/nodes/{self.rest_name}"
 
         self.rest_param_names = None
         self.declare_rest_parameters()
