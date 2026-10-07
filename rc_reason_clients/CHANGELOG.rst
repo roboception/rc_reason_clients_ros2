@@ -1,8 +1,12 @@
-Forthcoming
------------
+0.6.0 (2026-10-07)
+------------------
 
-* ItemPick/BoxPick: support optional dimensioning in compute_grasps and detect_items
 * add rest_port parameter to configure the REST-API port
+* ItemPick/BoxPick: support optional dimensioning in compute_grasps and detect_items
+* ItemPick: provide detect_items service if available on the device
+* ItemPickAI: add MAIL_ITEMS object category
+* add trigger_dump service to all clients if supported by the device and module
+* add gRPC image event client (rc_image_event_client) for depth_acquisition_done events
 
 0.5.0 (2025-07-30)
 ------------------

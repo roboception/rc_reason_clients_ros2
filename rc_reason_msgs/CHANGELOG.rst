@@ -1,8 +1,17 @@
-Forthcoming
------------
+0.6.0 (2026-10-07)
+------------------
 
 * ComputeGrasps and DetectItems srv: add optional dimensioning
 * Item msg: add types BOX and TEXTURED_BOX and box field for dimensioned BoxPick items
+* Grasp and SuctionGrasp msg: add tcp_id
+* Item and ItemModel msg: add MAIL_ITEMS type
+* add TriggerDump srv
+* add ImageEvent msg
+* SilhouetteMatchDetectObject srv: add optional object_segmentation_model for SilhouetteMatchAI
+* Grasp msg: add stroke_per_finger_approach_mm and stroke_per_finger_grasp_mm
+* support BoxPick+Match and ItemPickAI:
+  add TexturedBox msg, ItemModel types TEXTURED_BOX, BAG, CONSUMER_GOODS and SHEET_METAL,
+  Item types TEXTURED_RECTANGLE, BAG, CONSUMER_GOODS and SHEET_METAL
 
 0.5.0 (2025-07-30)
 ------------------
