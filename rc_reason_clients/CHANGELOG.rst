@@ -1,3 +1,8 @@
+0.6.1 (2026-10-07)
+------------------
+
+* only generate protos in build_py/develop, fixes ROS buildfarm sourcedeb job
+
 0.6.0 (2026-10-07)
 ------------------
 
